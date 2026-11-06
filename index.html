@@ -5,13 +5,13 @@
 <meta name="color-scheme" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Prata&family=Golos+Text:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;600;700&family=Prata&family=Golos+Text:wght@400;500;600&display=swap">
 <style>
 /* Layout: club workbook — same paper look as «Всё по полочкам» — sticky tab strip, one calm column, black ink; each section is its own page */
 :root{
   --bg:#FFFFFF; --fg:#111111; --muted:#6E6E6E; --faint:#B5B5B5; --line:#EBEBEB; --soft:#F5F5F5;
   --danger:#C0392B; --ok:#1F7A4D;
-  --display:"Prata",Georgia,"Times New Roman",serif;
+  --display:"Cormorant SC","Prata",Georgia,"Times New Roman",serif;
   --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
   color-scheme:light;
 }
@@ -38,7 +38,15 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .hero{padding-top:24px;display:flex;flex-direction:column;gap:4px}
 .hero .date{color:var(--muted);font-size:14px}
 .hero .date::first-letter{text-transform:uppercase}
-.hero h1{font-size:40px;line-height:1.08}
+.hero h1{font-size:34px;line-height:1.1}
+h1,h2,h3{font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#141414;text-shadow:0 1px 0 #fff,0 1px 2px rgba(0,0,0,.2)}
+.nav button{font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:15px}
+.nav button:not([aria-selected="true"]){color:#3a3a3a;text-shadow:0 1px 0 #fff,0 1px 2px rgba(0,0,0,.15)}
+.btn.primary,.go{font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.paydot{width:28px;height:28px;border:0;padding:0;background:none;display:inline-flex;align-items:center;justify-content:center;align-self:center}
+.paydot::after{content:"";width:14px;height:14px;border-radius:50%;background:#D64541;box-shadow:inset 0 -1px 2px rgba(0,0,0,.25),0 1px 1px rgba(0,0,0,.12)}
+.paydot.ok::after{background:#2E9E5B}
+.soon .it.hot .what{font-weight:600}
 .hero p{margin:6px 0 0;font-size:17px;max-width:48ch}
 .late{color:var(--danger)}
 
@@ -74,7 +82,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .card{border:1px solid var(--line);border-radius:18px;padding:18px}
 .card.ink{border-color:var(--fg)}
 .sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.sec-h h2{font-size:22px}
+.sec-h h2{font-size:20px}
 .sec-h small{color:var(--muted);font-size:13px}
 h3.g{font-size:19px;margin:18px 0 2px}
 h3.g.late{color:var(--danger)}
@@ -2678,14 +2686,14 @@ details.card summary{cursor:pointer}
 <script>
 /* ================= constants ================= */
 const CLUB="СШ №2 Элика-Арт";
-const TABS=[["today","Главное"],["kids","Дети"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["pay","Оплата"],["rules","Правила"]];
+const TABS=[["today","Главное"],["chat","Чат"],["kids","Дети"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["pay","Оплата"],["rules","Правила"]];
 const WHAT={lessons:"Занятия",fee:"Взнос за турнир",other:"Другое"},METHOD={cash:"Наличные",card:"На карту"};
 const GROUP_HINTS=["Дети-1+Дети-2, E класс, Ст/Ла","Юниоры-1+Юниоры-2, E класс, Ст/Ла","Дети-2, E класс, 6 танцев","Дети-1+Дети-2, E класс","Юниоры-1+Юниоры-2, E класс"];
 
 /* ================= state ================= */
 let kids=[],pairs=[],solos=[],events=[],entries=[],sentDocs=[],settings={},payDocs=[],loaded=false,mode="local",db=null,me=null,uid=null,payPath="";
 const st={tab:"today",kq:"",kgroup:"",kedit:null,pairAdd:false,evEdit:null,evOpen:null,entryAdd:null,msgOpen:null,enWho:"",enOwn:false,soloAdd:false,payMonth:"",payView:"list",payAdd:null,payCoach:"",payEv:"",rsec:"cost",rq:"",cage:"",fprog:"",fdance:0,fcls:"",fq:"",fnp:"",dq:""};
-try{const t=localStorage.getItem("klub-tab");if(t&&TABS.some(x=>x[0]===t))st.tab=t;const r=localStorage.getItem("klub-rsec");if(r)st.rsec=r;const c=localStorage.getItem("klub-cage");if(c)st.cage=c}catch(e){}
+try{const t=localStorage.getItem("klub-tab");if(t&&TABS.some(x=>x[0]===t))st.tab=t;const qt=new URLSearchParams(location.search).get("tab");if(qt&&TABS.some(x=>x[0]===qt))st.tab=qt;const r=localStorage.getItem("klub-rsec");if(r)st.rsec=r;const c=localStorage.getItem("klub-cage");if(c)st.cage=c}catch(e){}
 /* ================= helpers ================= */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -2751,7 +2759,8 @@ async function api(body){
   const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({initData:INIT,...body})});
   return r.json();
 }
-function applyData(d){kids=d.kids||[];pairs=d.pairs||[];solos=d.solos||[];events=d.events||[];entries=d.entries||[];sentDocs=d.sent||[];payDocs=d.pay||[];settings=(d.settings||[]).find(x=>x.id==="main")||{}}
+let notes=[];
+function applyData(d){notes=(d.settings||[]).filter(x=>String(x.id).startsWith("note-"));kids=d.kids||[];pairs=d.pairs||[];solos=d.solos||[];events=d.events||[];entries=d.entries||[];sentDocs=d.sent||[];payDocs=d.pay||[];settings=(d.settings||[]).find(x=>x.id==="main")||{}}
 async function pull(){const r=await api({action:"all"});if(!r.ok)throw r;rev=r.rev;me=r.me;uid=me.id;people=r.people||[];applyData(r.data);loaded=true;render();return r}
 async function poll(){if(syncing||document.hidden||mode!=="cloud")return;try{const r=await api({action:"ver"});if(r.ok&&r.rev!==rev)await pull()}catch(e){}}
 function gate(html){let g=$("#gate");if(!g){g=document.createElement("div");g.id="gate";document.body.appendChild(g)}g.innerHTML=`<div class="gate-in">${html}</div>`}
@@ -2811,6 +2820,36 @@ function vToday(){
   return h;
 }
 
+/* ================= чат тренеров ================= */
+const NOTE_TAGS={idea:"Идея",note:"Заметка",question:"Вопрос"};
+function lastSeenChat(){try{return +localStorage.getItem("klub-chat-seen")||0}catch(e){return 0}}
+function markChatSeen(){try{localStorage.setItem("klub-chat-seen",String(Date.now()))}catch(e){}}
+function unseenNotes(){const t=lastSeenChat();return notes.filter(n=>n.at>t&&n.byId!==(me&&me.id)).length}
+function wChat(){
+  const tag=st.chatTag||"note",f=st.chatFilter||"all";
+  let h=`<section class="capture"><textarea id="chat-text" rows="3" placeholder="Идея, заметка или вопрос для всех тренеров…">${esc(st.chatDraft||"")}</textarea>
+    <div class="cap-bar"><div class="kinds">${Object.entries(NOTE_TAGS).map(([k,n])=>`<button type="button" class="pill" data-a="chattag" data-v="${k}" aria-pressed="${tag===k}">${n}</button>`).join("")}</div>
+    <button type="button" class="go" data-a="chatsend" ${(st.chatDraft||"").trim()?"":"disabled"}>Отправить</button></div></section>`;
+  const list=notes.filter(n=>f==="all"||n.tag===f).sort((a,b)=>b.at-a.at);
+  h+=`<div class="sub-tabs">${[["all","Все"],...Object.entries(NOTE_TAGS)].map(([k,n])=>`<button type="button" class="pill" data-a="chatfilter" data-v="${k}" aria-pressed="${f===k}">${n}${k==="all"?"":" · "+notes.filter(x=>x.tag===k).length}</button>`).join("")}</div>`;
+  h+=list.length?list.map(n=>{const mine=me&&(n.byId===me.id||me.owner);
+    return`<article class="card" style="padding:14px 16px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap"><b>${esc(n.by||"Тренер")}</b><small class="muted">${esc(NOTE_TAGS[n.tag]||"Заметка")} · ${esc(dmy(fmt(new Date(n.at))))} ${esc(hm(n.at))}</small></div>
+      <div style="white-space:pre-wrap;margin-top:6px">${esc(n.text)}</div>${mine?`<div style="text-align:right;margin-top:6px"><button class="mini" data-a="chatdel" data-id="${esc(n.id)}">удалить</button></div>`:""}</article>`}).join("")
+    :`<p class="empty"><b>Пока пусто</b>Напишите первую идею или заметку — её увидят все тренеры с доступом.</p>`;
+  return h;
+}
+async function chatSend(){
+  const text=(st.chatDraft||"").trim();if(!text||!me)return;
+  const n={id:"note-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),text,tag:st.chatTag||"note",by:String(me.name||"").replace(/\s*\(@[^)]*\)$/,""),byId:me.id,at:Date.now()};
+  notes.push(n);st.chatDraft="";markChatSeen();render();
+  syncing=true;try{const r=await api({action:"put",col:"settings",id:n.id,doc:n});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}
+}
+async function chatDel(id){
+  const i=notes.findIndex(x=>x.id===id);if(i<0)return;const old=notes[i];notes.splice(i,1);render();
+  toast("Сообщение удалено",async()=>{notes.push(old);render();try{await api({action:"put",col:"settings",id:old.id,doc:old})}catch(e){}});
+  syncing=true;try{const r=await api({action:"del",col:"settings",id});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}
+}
+
 /* ================= работа ================= */
 /* ================= view: work ================= */
 function kidForm(k){
@@ -2832,7 +2871,8 @@ function kidForm(k){
 function wKids(){
   const groups=[...new Set(kids.map(k=>k.group||"Без группы"))].sort();
   if(st.kgroup&&!groups.includes(st.kgroup))st.kgroup="";
-  let h=`<div class="row between"><p class="muted" style="margin:0;font-size:14px">${kids.length} ${plural(kids.length,"ребёнок","ребёнка","детей")}</p>
+  const pm=today().slice(0,7),paidM=k=>paySum(pays().filter(x=>x.kid===k.id&&x.what==="lessons"&&x.month===pm))>0,okN=kids.filter(paidM).length;
+  let h=`<div class="row between"><p class="muted" style="margin:0;font-size:14px">${kids.length} ${plural(kids.length,"ребёнок","ребёнка","детей")} · за ${monLabel(pm).split(" ")[0]} оплатили ${okN} из ${kids.length}</p>
     <button class="btn primary" data-a="kadd">Добавить ребёнка</button></div>`;
   if(st.kedit==="new")h+=`<div class="card">${kidForm({})}</div>`;
   h+=`<input class="search" id="ksearch" type="search" placeholder="Найти ребёнка" value="${esc(st.kq)}" aria-label="Найти ребёнка">
@@ -2845,8 +2885,20 @@ function wKids(){
   Object.keys(by).sort((x,y)=>x==="Без группы"?1:y==="Без группы"?-1:x.localeCompare(y,"ru")).forEach(g=>{const arr=by[g].sort((a,b)=>a.name.localeCompare(b.name,"ru"));
     h+=`<section><div class="sec-h"><h2>${esc(g)}</h2><small>${esc(arr[0].coach||"")} · ${arr.length}</small></div><ul class="list">${arr.map(k=>{
       if(st.kedit===k.id)return`<li>${kidForm(k)}</li>`;
-      return`<li><div class="kid"><button class="nm" data-a="kedit" data-id="${k.id}">${esc(k.name)}</button><span></span>
+      return`<li><div class="kid"><button class="nm" data-a="kedit" data-id="${k.id}">${esc(k.name)}</button><button class="paydot ${paidM(k)?"ok":""}" data-a="kpaydot" data-id="${k.id}" aria-label="${paidM(k)?"Оплачено за месяц — нажмите, чтобы снять отметку":"Не оплачено — нажмите, чтобы отметить оплату"}" title="${paidM(k)?"Оплачено":"Не оплачено"}"></button>
         <div class="sub"><span>${k.dob?esc(dmy(k.dob))+" · "+ageNow(k.dob)+" "+plural(ageNow(k.dob),"год","года","лет"):"дата рождения не указана"}</span>${k.dob?`<span>${category(k.dob)}</span>`:""}${k.mark?`<span>${esc(k.mark)}</span>`:""}${k.phone?`<span>${esc(k.phone)}</span>`:""}${k.notes?`<span>📝 ${esc(k.notes.slice(0,60))}</span>`:""}</div></div></li>`}).join("")}</ul></section>`});
+  return h;
+}
+function wBdays(){
+  const t=today();
+  const L=kids.filter(k=>k.dob).map(k=>{const d=nextBirthday(k.dob);return{k,d,n:diffDays(t,d),age:+d.slice(0,4)-+k.dob.slice(0,4)}}).sort((a,b)=>a.n-b.n);
+  const soon=L.filter(x=>x.n<=30),later=L.filter(x=>x.n>30).slice(0,8),noDob=kids.length-L.length;
+  const row=x=>`<div class="it${x.n<=1?" hot":""}"><div class="when"><b>${x.n===0?"сегодня":x.n===1?"завтра":x.n}</b>${x.n>1?plural(x.n,"день","дня","дней"):""}</div><div class="what">${esc(x.k.name)}<small>${esc(dmy(x.d))} · исполнится ${x.age} ${plural(x.age,"год","года","лет")}${x.k.group?" · "+esc(x.k.group):""}${x.k.coach?" · "+esc(x.k.coach):""}</small></div>${x.n<=1?`<span class="badge">др</span>`:""}</div>`;
+  let h=`<section class="card"><div class="sec-h"><h2>Ближайшие 30 дней</h2><small>${soon.length} ${plural(soon.length,"именинник","именинника","именинников")}</small></div>`;
+  h+=soon.length?`<div class="soon">${soon.map(row).join("")}</div>`:`<p class="empty"><b>В ближайший месяц дней рождения нет</b></p>`;
+  h+=`</section>`;
+  if(later.length)h+=`<section><div class="sec-h"><h2>Дальше</h2></div><div class="soon">${later.map(row).join("")}</div></section>`;
+  if(noDob)h+=`<p class="muted" style="font-size:14px;margin:0">У ${noDob} ${plural(noDob,"ребёнка","детей","детей")} не указана дата рождения — её можно добавить в разделе «Дети», нажав на имя.</p>`;
   return h;
 }
 function kidOptions(sel,sex){return kids.filter(k=>!sex||sexOf(k)===sex).slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(k=>`<option value="${k.id}" ${sel===k.id?"selected":""}>${esc(k.name)}${k.dob?" ("+k.dob.slice(0,4)+")":""}</option>`).join("")}
@@ -2962,6 +3014,7 @@ const MONN=["январь","февраль","март","апрель","май","
 const monLabel=m=>{const[y,mm]=m.split("-");return MONN[+mm-1]+" "+y};
 const monShift=(m,n)=>{const[y,mm]=m.split("-").map(Number);const d=new Date(y,mm-1+n,1);return d.getFullYear()+"-"+pad(d.getMonth()+1)};
 const pays=()=>payDocs.filter(x=>x.kind==="pay");
+const paySum=a=>a.reduce((s,x)=>s+(+x.amount||0),0);
 const payCfg=()=>payDocs.find(x=>x.id==="paycfg")||{};
 function payForm(){
   const f=st.payAdd||{},t=today(),cfg=payCfg();
@@ -3297,15 +3350,15 @@ function render(){
   const a=document.activeElement,aid=a&&a.id,sel=a&&a.selectionStart,inView=a&&$("#view").contains(a);
   renderNav();renderHero();
   const v=$("#view");
-  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,kids:wKids,pairs:wPairs,solo:wSolo,events:wEvents,pay:wPay,rules:wRules})[st.tab]();
+  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,chat:wChat,kids:wKids,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,pay:wPay,rules:wRules})[st.tab]();
   renderFoot();afterRules();
   if(inView&&aid){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
-function renderNav(){$("#nav").innerHTML=TABS.map(([k,n])=>`<button role="tab" data-a="tab" data-v="${k}" aria-selected="${st.tab===k}">${n}</button>`).join("");const on=$("#nav [aria-selected=true]");if(on){const n=$("#nav");if(on.offsetLeft+on.offsetWidth>n.scrollLeft+n.clientWidth||on.offsetLeft<n.scrollLeft)n.scrollLeft=on.offsetLeft-20}}
+function renderNav(){if(st.tab==="chat"&&loaded)markChatSeen();const un=unseenNotes();$("#nav").innerHTML=TABS.map(([k,n])=>`<button role="tab" data-a="tab" data-v="${k}" aria-selected="${st.tab===k}">${n}${k==="chat"&&un?`<sup>${un}</sup>`:""}</button>`).join("");const on=$("#nav [aria-selected=true]");if(on){const n=$("#nav");if(on.offsetLeft+on.offsetWidth>n.scrollLeft+n.clientWidth||on.offsetLeft<n.scrollLeft)n.scrollLeft=on.offsetLeft-20}}
 function renderHero(){
   const date=new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
-  const titles={today:"Клуб",kids:"Дети",pairs:"Пары",solo:"Соло",events:"Турниры",pay:"Оплата",rules:"Правила"};
-  const p={today:`«${CLUB}» — общий журнал тренеров.`,kids:"Список детей по группам. Нажмите на имя, чтобы изменить.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
+  const titles={today:"Клуб",chat:"Чат тренеров",kids:"Дети",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",pay:"Оплата",rules:"Правила"};
+  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",kids:"Список детей по группам. Нажмите на имя, чтобы изменить. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
   $("#hero").innerHTML=`<div class="date">${date}</div><h1>${titles[st.tab]}</h1>${p?`<p>${p}</p>`:""}`;
 }
 function renderFoot(){$("#foot").innerHTML=`<span>${mode==="cloud"?"Общие данные клуба: видят и меняют руководители, которым владелец открыл доступ. Оплаты — личные.":"Откройте приложение через бота в Telegram."}</span>`}
@@ -3316,6 +3369,10 @@ document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,id=b.dataset.id;
   switch(a){
     case"tab":st.tab=b.dataset.v;try{localStorage.setItem("klub-tab",st.tab)}catch(_){}render();window.scrollTo({top:0});return;
+    case"chattag":st.chatTag=b.dataset.v;render();return;
+    case"chatfilter":st.chatFilter=b.dataset.v;render();return;
+    case"chatsend":chatSend();return;
+    case"chatdel":chatDel(id);return;
     case"allow":setAccess(id,true);return;
     case"revoke":setAccess(id,false);return;
     case"goevent":st.tab="events";st.evOpen=id;render();setTimeout(()=>document.getElementById("ev-"+id)?.scrollIntoView({behavior:"smooth"}),50);return;
@@ -3358,6 +3415,13 @@ document.addEventListener("click",async e=>{
       if(f.what==="lessons")o.month=f.month;if(f.what==="fee")o.ev=f.ev;
       await put("pay",o);if(f.what==="fee")await put("pay",{id:"paycfg",...payCfg(),lastFee:amount});
       st.payAdd=null;if((o.date||"").slice(0,7)!==st.payMonth&&f.what!=="lessons")st.payMonth=o.date.slice(0,7);render();toast(`Записал: ${shortName(kidById(o.kid))} — ${rub(amount)}, ${METHOD[o.method].toLowerCase()}`);return}
+    case"kpaydot":{const pm=today().slice(0,7),cfg=payCfg(),k=kidById(id);
+      const mine=pays().filter(x=>x.kid===id&&x.what==="lessons"&&x.month===pm);
+      if(paySum(mine)>0){for(const x of mine)await remove("pay",x.id);toast(`${shortName(k)}: отметка об оплате снята`,async()=>{for(const x of mine)await put("pay",x)});return}
+      const amount=Math.round(+cfg.fee||0);
+      if(!amount){st.tab="pay";st.payMonth=pm;st.payAdd={kid:id,what:"lessons",method:"cash",month:pm,amount:""};render();window.scrollTo({top:0,behavior:"smooth"});setTimeout(()=>$("#pf-amount")?.focus(),50);toast("Укажите сумму абонемента — дальше кружок будет отмечать сразу");return}
+      const o={id:"p-"+newId(),kind:"pay",kid:id,amount,what:"lessons",method:"cash",month:pm,date:today(),note:"",at:Date.now()};
+      await put("pay",o);toast(`${shortName(k)}: оплачено за ${monLabel(pm).split(" ")[0]}`,()=>remove("pay",o.id));return}
     case"paydel":{const x=payDocs.find(y=>y.id===id);await remove("pay",id);toast("Оплата удалена",()=>put("pay",x));return}
     case"pairdel":{const p=pairs.find(x=>x.id===id);await remove("pairs",id);toast("Пара убрана",()=>put("pairs",p));return}
     case"evadd":st.evEdit="new";render();setTimeout(()=>$("#ev-name")?.focus(),0);return;
@@ -3389,7 +3453,8 @@ document.addEventListener("change",async e=>{const t=e.target;
   if(t.id==="en-who"){st.enWho=t.value;render();setTimeout(()=>$("#en-cat")?.focus(),0)}
   else if(t.id==="en-cat"){const own=t.value==="own";if(own!==!!st.enOwn){st.enOwn=own;render();if(own){const s=$("#en-cat");if(s)s.value="own";setTimeout(()=>$("#en-group")?.focus(),0)}}}
 });
-document.addEventListener("input",e=>{if(e.target.id==="ksearch"){st.kq=e.target.value;render()}
+document.addEventListener("input",e=>{if(e.target.id==="chat-text"){st.chatDraft=e.target.value;const g=document.querySelector('[data-a="chatsend"]');if(g)g.disabled=!e.target.value.trim();return}
+  if(e.target.id==="ksearch"){st.kq=e.target.value;render()}
   else if(e.target.id==="fq"){st.fq=e.target.value;const F=figsData();const doc=st.fprog==="n"?(F.n||{})[st.fnp]:F[st.fprog];const d=doc&&doc.dances[st.fdance];if(d)$("#figbody").innerHTML=figRows(d,st.fcls,st.fq)}
   else if(e.target.id==="dq"){st.dq=e.target.value;clearTimeout(window._dqt);window._dqt=setTimeout(()=>docFilter(st.dq),200)}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&st.kedit){st.kedit=null;render()}});
@@ -3397,4 +3462,3 @@ render();init();
 </script>
 
 </body></html>
-
