@@ -47,6 +47,13 @@ h1,h2,h3{font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#141
 .paydot::after{content:"";width:14px;height:14px;border-radius:50%;background:#D64541;box-shadow:inset 0 -1px 2px rgba(0,0,0,.25),0 1px 1px rgba(0,0,0,.12)}
 .paydot.ok::after{background:#2E9E5B}
 .soon .it.hot .what{font-weight:600}
+.attrow{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;border:0;background:none;padding:12px 0;text-align:left;font-size:16px}
+.attrow small{font-size:13px;color:var(--danger)}
+.attrow.on small{color:var(--muted)}
+.attmark{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--danger)}
+.attrow.on .attmark{background:#2E9E5B;border-color:#2E9E5B}
+.place{font-family:var(--display);font-size:20px;font-weight:600}
+.place.top{color:#9A7B1E}
 .hero p{margin:6px 0 0;font-size:17px;max-width:48ch}
 .late{color:var(--danger)}
 
@@ -2686,7 +2693,7 @@ details.card summary{cursor:pointer}
 <script>
 /* ================= constants ================= */
 const CLUB="СШ №2 Элика-Арт";
-const TABS=[["today","Главное"],["chat","Чат"],["kids","Дети"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["pay","Оплата"],["rules","Правила"]];
+const TABS=[["today","Главное"],["chat","Чат"],["kids","Дети"],["lessons","Занятия"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["results","Результаты"],["pay","Оплата"],["rules","Правила"]];
 const WHAT={lessons:"Занятия",fee:"Взнос за турнир",other:"Другое"},METHOD={cash:"Наличные",card:"На карту"};
 const GROUP_HINTS=["Дети-1+Дети-2, E класс, Ст/Ла","Юниоры-1+Юниоры-2, E класс, Ст/Ла","Дети-2, E класс, 6 танцев","Дети-1+Дети-2, E класс","Юниоры-1+Юниоры-2, E класс"];
 
@@ -2760,7 +2767,7 @@ async function api(body){
   return r.json();
 }
 let notes=[];
-function applyData(d){notes=(d.settings||[]).filter(x=>String(x.id).startsWith("note-"));kids=d.kids||[];pairs=d.pairs||[];solos=d.solos||[];events=d.events||[];entries=d.entries||[];sentDocs=d.sent||[];payDocs=d.pay||[];settings=(d.settings||[]).find(x=>x.id==="main")||{}}
+function applyData(d){notes=(d.settings||[]).filter(x=>String(x.id).startsWith("note-"));kids=d.kids||[];pairs=d.pairs||[];solos=d.solos||[];events=d.events||[];entries=d.entries||[];sentDocs=d.sent||[];payDocs=d.pay||[];settings=(d.settings||[]).find(x=>x.id==="main")||{};applyExtra(d.settings||[])}
 async function pull(){const r=await api({action:"all"});if(!r.ok)throw r;rev=r.rev;me=r.me;uid=me.id;people=r.people||[];applyData(r.data);loaded=true;render();return r}
 async function poll(){if(syncing||document.hidden||mode!=="cloud")return;try{const r=await api({action:"ver"});if(r.ok&&r.rev!==rev)await pull()}catch(e){}}
 function gate(html){let g=$("#gate");if(!g){g=document.createElement("div");g.id="gate";document.body.appendChild(g)}g.innerHTML=`<div class="gate-in">${html}</div>`}
@@ -2803,7 +2810,7 @@ function soonList(){
 }
 function vToday(){
   const t=today(),soon=soonList();
-  let h=`<section class="card"><div class="sec-h"><h2>Скоро</h2><small>дни рождения — 2 недели, турниры с участниками — 2 месяца</small></div>`;
+  let h=todayLessonsCard()+`<section class="card"><div class="sec-h"><h2>Скоро</h2><small>дни рождения — 2 недели, турниры с участниками — 2 месяца</small></div>`;
   h+=soon.length?`<div class="soon">${soon.slice(0,10).map(s=>{const n=diffDays(t,s.date);
     return`<div class="it"><div class="when"><b>${n===0?"сегодня":n===1?"завтра":n}</b>${n>1?plural(n,"день","дня","дней"):""}</div><div class="what">${esc(s.title)}<small>${esc(dmy(s.date))} · ${esc(s.sub)}</small></div>${s.type==="event"?`<button class="mini" data-a="goevent" data-id="${s.id}">открыть</button>`:`<span class="badge">др</span>`}</div>`}).join("")}</div>`
     :`<p class="muted" style="margin:0">Ближайших событий нет.</p>`;
@@ -2886,7 +2893,7 @@ function wKids(){
     h+=`<section><div class="sec-h"><h2>${esc(g)}</h2><small>${esc(arr[0].coach||"")} · ${arr.length}</small></div><ul class="list">${arr.map(k=>{
       if(st.kedit===k.id)return`<li>${kidForm(k)}</li>`;
       return`<li><div class="kid"><button class="nm" data-a="kedit" data-id="${k.id}">${esc(k.name)}</button><button class="paydot ${paidM(k)?"ok":""}" data-a="kpaydot" data-id="${k.id}" aria-label="${paidM(k)?"Оплачено за месяц — нажмите, чтобы снять отметку":"Не оплачено — нажмите, чтобы отметить оплату"}" title="${paidM(k)?"Оплачено":"Не оплачено"}"></button>
-        <div class="sub"><span>${k.dob?esc(dmy(k.dob))+" · "+ageNow(k.dob)+" "+plural(ageNow(k.dob),"год","года","лет"):"дата рождения не указана"}</span>${k.dob?`<span>${category(k.dob)}</span>`:""}${k.mark?`<span>${esc(k.mark)}</span>`:""}${k.phone?`<span>${esc(k.phone)}</span>`:""}${k.notes?`<span>📝 ${esc(k.notes.slice(0,60))}</span>`:""}</div></div></li>`}).join("")}</ul></section>`});
+        <div class="sub"><span>${k.dob?esc(dmy(k.dob))+" · "+ageNow(k.dob)+" "+plural(ageNow(k.dob),"год","года","лет"):"дата рождения не указана"}</span>${k.dob?`<span>${category(k.dob)}</span>`:""}${k.mark?`<span>${esc(k.mark)}</span>`:""}${k.phone?`<span>${esc(k.phone)}</span>`:""}${(()=>{const at=kidAttend(k);return at?`<span>${at.held?`в ${MONP[new Date().getMonth()]}: на занятиях ${at.came} из ${at.held}`:"в этом месяце занятий не отмечено"}</span>${at.warn?`<span class="late">${esc(at.warn)}</span>`:""}`:""})()}${(()=>{const R=kidResults(k.id);if(!R.length)return"";const pl=R.map(r=>+r.place).filter(Boolean);return`<span>турниров: ${R.length}${pl.length?" · лучшее место: "+Math.min(...pl):""}</span>`})()}${k.notes?`<span>📝 ${esc(k.notes.slice(0,60))}</span>`:""}</div></div></li>`}).join("")}</ul></section>`});
   return h;
 }
 function wBdays(){
@@ -3345,20 +3352,172 @@ function docFilter(q){const body=$("#docbody");if(!body)return;const ql=q.trim()
   [...body.children].forEach(el=>{if(!ql){el.hidden=false;return}const hit=el.textContent.toLowerCase().includes(ql);el.hidden=!hit;if(hit)n++});
   const c=$("#dqn");if(c)c.textContent=ql?(n?`найдено: ${n}`:"ничего не нашлось"):""}
 
+/* ================= расписание, посещаемость, результаты ================= */
+let sched=[],attend=[],results=[];
+const XCOL={sch:()=>sched,att:()=>attend,res:()=>results};
+const MONP=["январе","феврале","марте","апреле","мае","июне","июле","августе","сентябре","октябре","ноябре","декабре"];
+const DOW=["","Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+const DOWF=["","понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"];
+const dowOf=s=>(parse(s).getDay()+6)%7+1;
+const gHash=s=>{let x=0;for(const c of String(s))x=(x*31+c.charCodeAt(0))|0;return(x>>>0).toString(36)};
+const allGroups=()=>[...new Set([...kids.map(k=>k.group).filter(Boolean),...sched.map(s=>s.group).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,"ru"));
+const groupKids=g=>kids.filter(k=>(k.group||"")===g).sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+const attId=(date,g)=>"att-"+date+"-"+gHash(g);
+const attOf=(date,g)=>attend.find(a=>a.id===attId(date,g));
+function applyExtra(list){sched=list.filter(x=>String(x.id).startsWith("sch-"));attend=list.filter(x=>String(x.id).startsWith("att-"));results=list.filter(x=>String(x.id).startsWith("res-"))}
+async function xput(o){const arr=XCOL[o.id.split("-")[0]]();const i=arr.findIndex(x=>x.id===o.id);if(i>=0)arr[i]=o;else arr.push(o);render();
+  if(mode!=="cloud")return;syncing=true;try{const r=await api({action:"put",col:"settings",id:o.id,doc:o});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}}
+async function xdel(id){const arr=XCOL[id.split("-")[0]]();const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);render();
+  if(mode!=="cloud")return;syncing=true;try{const r=await api({action:"del",col:"settings",id});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}}
+const todaysLessons=(d=today())=>sched.filter(s=>(s.days||[]).includes(dowOf(d))).sort((a,b)=>(a.start||"")<(b.start||"")?-1:1);
+const timeStr=s=>s.start?(s.start+(s.end?"–"+s.end:"")):"";
+
+/* ---- статистика посещений ребёнка ---- */
+function kidAttend(k){
+  if(!k.group)return null;
+  const recs=attend.filter(a=>a.group===k.group&&a.date<=today()).sort((a,b)=>a.date<b.date?-1:1);
+  if(!recs.length)return null;
+  const m=today().slice(0,7),mon=recs.filter(a=>a.date.slice(0,7)===m);
+  const came=a=>(a.present||[]).includes(k.id);
+  const last3=recs.slice(-3),d30=recs.filter(a=>a.date>=addDays(today(),-30));
+  let warn="";
+  if(last3.length===3&&!last3.some(came))warn="пропущены 3 последних занятия";
+  else if(d30.length>=4&&d30.filter(came).length/d30.length<0.6)warn="реже ходит на занятия";
+  return{held:mon.length,came:mon.filter(came).length,missed:mon.filter(a=>!came(a)).length,warn};
+}
+
+/* ---- результаты ребёнка ---- */
+const kidResults=id=>results.filter(r=>(r.kids||[]).includes(id));
+function resEvName(r){const ev=r.ev?events.find(e=>e.id===r.ev):null;return ev?ev.name:(r.evName||"турнир")}
+function resWho(r){const ks=(r.kids||[]).map(kidById);return ks.map(k=>shortName(k)).join(" и ")}
+
+/* ---- вкладка «Занятия» ---- */
+function attForm(){
+  const o=st.attOpen,ex=attOf(o.date,o.group),L=groupKids(o.group);
+  if(!st.attSel)st.attSel=new Set(ex?ex.present||[]:L.map(k=>k.id));
+  const sel=st.attSel;
+  let h=`<div class="card ink"><div class="sec-h"><h2>${esc(o.group)}</h2><small>${esc(ru(o.date,{weekday:"long",day:"numeric",month:"long"}))}</small></div>`;
+  if(!L.length)return h+`<p class="muted">В этой группе пока нет детей. Укажите группу в карточке ребёнка в разделе «Дети».</p><div class="row"><button class="btn" data-a="xattcancel">Закрыть</button></div></div>`;
+  h+=`<p class="muted" style="margin:0 0 8px;font-size:14px">Нажмите на тех, кого не было. Пришли: <b>${L.filter(k=>sel.has(k.id)).length}</b> из ${L.length}</p><ul class="list">${L.map(k=>{const on=sel.has(k.id);
+    return`<li><button class="attrow ${on?"on":""}" data-a="xatttoggle" data-id="${k.id}" aria-pressed="${on}"><span class="attmark" aria-hidden="true"></span><span>${esc(k.name)}</span><small>${on?"на занятии":"не было"}</small></button></li>`}).join("")}</ul>
+    <div class="row between" style="margin-top:12px"><span class="row"><button class="mini" data-a="xattall">все пришли</button><button class="mini" data-a="xattnone">никого</button></span><span class="row">${ex?`<button class="btn del" data-a="xattdel">Удалить отметку</button>`:""}<button class="btn" data-a="xattcancel">Отмена</button><button class="btn primary" data-a="xattsave">Сохранить</button></span></div></div>`;
+  return h;
+}
+function schForm(s){
+  const days=new Set(st.schDays||s.days||[]);
+  return`<div class="card"><div class="form" style="padding:0">
+    <div class="grid"><label>Группа<input id="sc-group" list="sc-groups" value="${esc(s.group||"")}" placeholder="например, Е класс"></label><label>Тренер<input id="sc-coach" value="${esc(s.coach||"")}"></label>
+      <label>Начало<input id="sc-start" type="time" value="${esc(s.start||"")}"></label><label>Конец<input id="sc-end" type="time" value="${esc(s.end||"")}"></label></div>
+    <div><div class="muted" style="font-size:13px;margin-bottom:6px">Дни недели</div><div class="chips">${[1,2,3,4,5,6,7].map(d=>`<button class="pill" data-a="xschday" data-v="${d}" aria-pressed="${days.has(d)}">${DOW[d]}</button>`).join("")}</div></div>
+    <label>Зал или адрес<input id="sc-place" value="${esc(s.place||"")}"></label>
+    <div class="row between">${s.id?`<button class="btn del" data-a="xschdel" data-id="${s.id}">Удалить</button>`:"<span></span>"}<span class="row"><button class="btn" data-a="xschcancel">Отмена</button><button class="btn primary" data-a="xschsave" data-id="${s.id||""}">Сохранить</button></span></div>
+    <datalist id="sc-groups">${allGroups().map(g=>`<option value="${esc(g)}">`).join("")}</datalist></div></div>`;
+}
+function lessonLine(s,d){const a=attOf(d,s.group),n=groupKids(s.group).length;
+  return`<div class="it"><div class="when"><b>${esc(s.start||"—")}</b>${s.end?esc(s.end):""}</div><div class="what">${esc(s.group)}<small>${[s.coach,s.place].filter(Boolean).map(esc).join(" · ")||"&nbsp;"}</small></div>${a?`<button class="mini" data-a="xattopen" data-v="${esc(s.group)}" data-d="${d}">${(a.present||[]).length} из ${n} ✓</button>`:`<button class="mini" data-a="xattopen" data-v="${esc(s.group)}" data-d="${d}">отметить</button>`}</div>`}
+function wLessons(){
+  const t=today();let h="";
+  if(st.attOpen)h+=attForm();
+  const tl=todaysLessons(t);
+  h+=`<section class="card"><div class="sec-h"><h2>Сегодня</h2><small>${esc(DOWF[dowOf(t)])}</small></div>`+
+    (tl.length?`<div class="soon">${tl.map(s=>lessonLine(s,t)).join("")}</div>`:`<p class="muted" style="margin:0">По расписанию занятий нет.</p>`)+`</section>`;
+  const groups=allGroups();
+  h+=`<section><div class="sec-h"><h2>Отметить другой день</h2></div><div class="row"><input id="xa-date" type="date" value="${esc(st.xaDate||t)}" max="${t}" style="border:1px solid var(--line);border-radius:999px;padding:6px 12px"><select id="xa-group" style="border:1px solid var(--line);border-radius:999px;padding:6px 12px"><option value="">группа…</option>${groups.map(g=>`<option ${st.xaGroup===g?"selected":""}>${esc(g)}</option>`).join("")}</select><button class="btn" data-a="xattother">Открыть</button></div></section>`;
+  const recent=attend.slice().sort((a,b)=>a.date<b.date?1:-1).slice(0,12);
+  if(recent.length)h+=`<section><div class="sec-h"><h2>Последние отметки</h2></div><ul class="list">${recent.map(a=>{const L=groupKids(a.group),abs=L.filter(k=>!(a.present||[]).includes(k.id));
+    return`<li><div class="ln"><div class="main"><b>${esc(a.group)}</b> · ${esc(ru(a.date,{weekday:"short",day:"numeric",month:"long"}))}<div class="meta">пришли ${(a.present||[]).length} из ${L.length}${abs.length?" · не было: "+abs.map(k=>esc(shortName(k))).join(", "):""}</div></div><button class="mini" data-a="xattopen" data-v="${esc(a.group)}" data-d="${a.date}">изменить</button></div></li>`}).join("")}</ul></section>`;
+  h+=`<section><div class="row between"><div class="sec-h" style="margin:0"><h2>Расписание</h2></div><button class="btn primary" data-a="xschadd">Добавить занятие</button></div>`;
+  if(st.schEdit==="new")h+=schForm({});
+  if(!sched.length&&st.schEdit!=="new")h+=`<p class="empty"><b>Расписания пока нет</b>Добавьте занятия группы: дни недели и время.</p>`;
+  else h+=`<ul class="list">${[1,2,3,4,5,6,7].flatMap(d=>sched.filter(s=>(s.days||[]).includes(d)).sort((a,b)=>(a.start||"")<(b.start||"")?-1:1).map(s=>[d,s])).map(([d,s])=>
+    st.schEdit===s.id&&st.schEditDay===d?`<li>${schForm(s)}</li>`:`<li><div class="ln"><span class="lead" style="width:28px;padding-top:2px"><b>${DOW[d]}</b></span><div class="main">${esc(timeStr(s))} · ${esc(s.group)}<div class="meta">${[s.coach,s.place].filter(Boolean).map(esc).join(" · ")}</div></div><button class="mini" data-a="xschedit" data-id="${s.id}" data-v="${d}">изменить</button></div></li>`).join("")}</ul>`;
+  return h+`</section>`;
+}
+
+/* ---- вкладка «Результаты» ---- */
+function resForm(){
+  const f=st.resAdd||{},t=today();
+  const evs=events.filter(e=>e.date&&e.date<=addDays(t,3)).sort((a,b)=>a.date<b.date?1:-1);
+  const who=[...pairs.map(p=>[`p:${p.id}`,"Пара: "+p.kids.map(kidById).map(shortName).join(" и ")]),...kids.slice().sort((a,b)=>a.name.localeCompare(b.name,"ru")).map(k=>[`k:${k.id}`,k.name])];
+  return`<div class="card ink"><div class="form" style="padding:0">
+    <label>Турнир<select id="rs-ev"><option value="">— другой (впишу название) —</option>${evs.map(e=>`<option value="${e.id}" ${f.ev===e.id?"selected":""}>${esc(dmy(e.date)+" · "+e.name)}</option>`).join("")}</select></label>
+    <div class="grid"><label>Название, если турнира нет в списке<input id="rs-evname" value="${esc(f.evName||"")}"></label><label>Дата<input id="rs-date" type="date" value="${esc(f.date||"")}"></label></div>
+    <label>Кто выступал<select id="rs-who"><option value="">—</option>${who.map(([v,n])=>`<option value="${v}" ${f.who===v?"selected":""}>${esc(n)}</option>`).join("")}</select></label>
+    <div class="grid"><label>Программа, класс<input id="rs-prog" value="${esc(f.prog||"")}" placeholder="Е класс, Стандарт"></label><label>Место<input id="rs-place" type="number" inputmode="numeric" min="1" value="${esc(f.place||"")}"></label>
+      <label>Из скольких пар/участников<input id="rs-of" type="number" inputmode="numeric" min="1" value="${esc(f.of||"")}"></label><label>Заметка<input id="rs-note" value="${esc(f.note||"")}" placeholder="вышли в финал, перевод в D…"></label></div>
+    <div class="row"><button class="btn" data-a="xrescancel">Отмена</button><button class="btn primary" data-a="xressave">Сохранить</button></div></div></div>`;
+}
+function wResults(){
+  let h=`<div class="row between"><p class="muted" style="margin:0;font-size:14px">${results.length} ${plural(results.length,"результат","результата","результатов")}</p><button class="btn primary" data-a="xresadd">Внести результат</button></div>`;
+  if(st.resAdd)h+=resForm();
+  const withRes=kids.filter(k=>kidResults(k.id).length).sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+  if(withRes.length)h+=`<select id="rs-filter" class="search" aria-label="Чьи результаты показать"><option value="">Все дети и пары</option>${withRes.map(k=>`<option value="${k.id}" ${st.resKid===k.id?"selected":""}>${esc(k.name)}</option>`).join("")}</select>`;
+  const L=results.filter(r=>!st.resKid||(r.kids||[]).includes(st.resKid)).sort((a,b)=>(a.date||"")<(b.date||"")?1:-1);
+  if(!L.length)return h+`<p class="empty"><b>Результатов пока нет</b>После турнира внесите места — у каждого ребёнка и пары соберётся история выступлений.</p>`;
+  if(st.resKid){const k=kidById(st.resKid),R=kidResults(st.resKid),pl=R.map(r=>+r.place).filter(Boolean);
+    h+=`<section class="stats"><div class="stat"><b>${R.length}</b><span>${plural(R.length,"выступление","выступления","выступлений")}</span></div><div class="stat"><b>${pl.length?Math.min(...pl):"—"}</b><span>лучшее место</span></div><div class="stat"><b>${pl.filter(x=>x<=3).length}</b><span>призовых мест</span></div><div class="stat"><b>${pl.filter(x=>x<=6).length}</b><span>финалов (1–6)</span></div></section>`}
+  const by={};L.forEach(r=>{const key=(r.date||"")+"|"+resEvName(r);(by[key]??=[]).push(r)});
+  Object.keys(by).forEach(key=>{const[d,n]=key.split("|");
+    h+=`<section><div class="sec-h"><h2>${esc(n)}</h2><small>${d?esc(ru(d,{day:"numeric",month:"long",year:"numeric"})):""}</small></div><ul class="list">${by[key].sort((a,b)=>(+a.place||99)-(+b.place||99)).map(r=>
+      `<li><div class="ln"><span class="lead" style="width:34px;padding-top:0"><b class="place ${+r.place&&+r.place<=3?"top":""}">${r.place?esc(r.place):"—"}</b></span><div class="main">${esc(resWho(r))}<div class="meta">${[r.place?r.place+" место"+(r.of?" из "+r.of:""):"",r.prog,r.note].filter(Boolean).map(esc).join(" · ")}</div></div><button class="mini" data-a="xresdel" data-id="${r.id}">убрать</button></div></li>`).join("")}</ul></section>`});
+  return h;
+}
+
+/* ---- главная: сегодняшние занятия ---- */
+function todayLessonsCard(){const t=today(),tl=todaysLessons(t);if(!tl.length)return"";
+  return`<section class="card"><div class="sec-h"><h2>Сегодня занятия</h2><small>отметьте, кто пришёл</small></div><div class="soon">${tl.map(s=>lessonLine(s,t)).join("")}</div></section>`}
+
+/* ---- действия ---- */
+function readSchForm(){return{group:v("sc-group"),coach:v("sc-coach"),start:v("sc-start"),end:v("sc-end"),place:v("sc-place")}}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-a^='x']");if(!b)return;const a=b.dataset.a,id=b.dataset.id;
+  switch(a){
+    case"xattopen":st.tab="lessons";st.attOpen={date:b.dataset.d,group:b.dataset.v};st.attSel=null;render();window.scrollTo({top:0,behavior:"smooth"});return;
+    case"xattother":{const d=v("xa-date"),g=v("xa-group");st.xaDate=d;st.xaGroup=g;if(!d||!g){toast("Выберите дату и группу");return}if(d>today()){toast("Эта дата ещё не наступила");return}st.attOpen={date:d,group:g};st.attSel=null;render();window.scrollTo({top:0,behavior:"smooth"});return}
+    case"xatttoggle":if(st.attSel.has(id))st.attSel.delete(id);else st.attSel.add(id);render();return;
+    case"xattall":groupKids(st.attOpen.group).forEach(k=>st.attSel.add(k.id));render();return;
+    case"xattnone":st.attSel.clear();render();return;
+    case"xattcancel":st.attOpen=null;st.attSel=null;render();return;
+    case"xattsave":{const o=st.attOpen,L=groupKids(o.group),present=L.filter(k=>st.attSel.has(k.id)).map(k=>k.id);
+      st.attOpen=null;st.attSel=null;await xput({id:attId(o.date,o.group),date:o.date,group:o.group,present,by:me?String(me.name||"").replace(/\s*\(@[^)]*\)$/,""):"",at:Date.now()});toast(`${o.group}: пришли ${present.length} из ${L.length}`);return}
+    case"xattdel":{const o=st.attOpen,old=attOf(o.date,o.group);st.attOpen=null;st.attSel=null;if(old){await xdel(old.id);toast("Отметка удалена",()=>xput(old))}else render();return}
+    case"xschadd":st.schEdit="new";st.schDays=[];render();setTimeout(()=>$("#sc-group")?.focus(),0);return;
+    case"xschedit":st.schEdit=id;st.schEditDay=+b.dataset.v;st.schDays=(sched.find(s=>s.id===id)||{}).days||[];render();return;
+    case"xschday":{const d=+b.dataset.v,f=readSchForm();const s=new Set(st.schDays||[]);s.has(d)?s.delete(d):s.add(d);st.schDays=[...s].sort();
+      const keep={...f};render();Object.entries({"sc-group":keep.group,"sc-coach":keep.coach,"sc-start":keep.start,"sc-end":keep.end,"sc-place":keep.place}).forEach(([k,val])=>{const el=document.getElementById(k);if(el)el.value=val});return}
+    case"xschcancel":st.schEdit=null;st.schDays=null;render();return;
+    case"xschsave":{const f=readSchForm();if(!f.group){toast("Укажите группу");return}if(!(st.schDays||[]).length){toast("Выберите дни недели");return}
+      const old=id?sched.find(s=>s.id===id):null;await xput({...(old||{}),id:id||"sch-"+newId(),...f,days:st.schDays});st.schEdit=null;st.schDays=null;render();toast("Расписание сохранено");return}
+    case"xschdel":{const old=sched.find(s=>s.id===id);st.schEdit=null;await xdel(id);toast("Занятие убрано из расписания",()=>xput(old));return}
+    case"xresadd":st.resAdd={};render();window.scrollTo({top:0,behavior:"smooth"});return;
+    case"xrescancel":st.resAdd=null;render();return;
+    case"xressave":{const evId=v("rs-ev"),ev=evId?events.find(x=>x.id===evId):null,who=v("rs-who");
+      if(!ev&&!v("rs-evname")){toast("Выберите турнир или впишите название");return}if(!who){toast("Выберите, кто выступал");return}
+      const ks=who.startsWith("p:")?(pairs.find(p=>p.id===who.slice(2))||{}).kids||[]:[who.slice(2)];
+      const o={id:"res-"+newId(),ev:evId||"",evName:ev?ev.name:v("rs-evname"),date:v("rs-date")||(ev?ev.date:"")||today(),kids:ks,prog:v("rs-prog"),place:v("rs-place"),of:v("rs-of"),note:v("rs-note"),at:Date.now()};
+      st.resAdd={ev:evId,evName:ev?"":o.evName,date:v("rs-date"),prog:o.prog,of:o.of};await xput(o);toast(`Записал: ${resWho(o)}${o.place?" — "+o.place+" место":""}`);return}
+    case"xresdel":{const old=results.find(r=>r.id===id);await xdel(id);toast("Результат убран",()=>xput(old));return}
+  }
+});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.id==="rs-ev"){const ev=events.find(x=>x.id===t.value);const d=document.getElementById("rs-date");if(ev&&d&&!d.value)d.value=ev.date||""}
+  if(t.id==="rs-filter"){st.resKid=t.value;render()}
+});
+
 /* ================= оболочка ================= */
 function render(){
   const a=document.activeElement,aid=a&&a.id,sel=a&&a.selectionStart,inView=a&&$("#view").contains(a);
   renderNav();renderHero();
   const v=$("#view");
-  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,chat:wChat,kids:wKids,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,pay:wPay,rules:wRules})[st.tab]();
+  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,chat:wChat,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,results:wResults,pay:wPay,rules:wRules})[st.tab]();
   renderFoot();afterRules();
   if(inView&&aid){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
 function renderNav(){if(st.tab==="chat"&&loaded)markChatSeen();const un=unseenNotes();$("#nav").innerHTML=TABS.map(([k,n])=>`<button role="tab" data-a="tab" data-v="${k}" aria-selected="${st.tab===k}">${n}${k==="chat"&&un?`<sup>${un}</sup>`:""}</button>`).join("");const on=$("#nav [aria-selected=true]");if(on){const n=$("#nav");if(on.offsetLeft+on.offsetWidth>n.scrollLeft+n.clientWidth||on.offsetLeft<n.scrollLeft)n.scrollLeft=on.offsetLeft-20}}
 function renderHero(){
   const date=new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
-  const titles={today:"Клуб",chat:"Чат тренеров",kids:"Дети",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",pay:"Оплата",rules:"Правила"};
-  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",kids:"Список детей по группам. Нажмите на имя, чтобы изменить. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
+  const titles={today:"Клуб",chat:"Чат тренеров",kids:"Дети",lessons:"Занятия",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",results:"Результаты",pay:"Оплата",rules:"Правила"};
+  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",kids:"Список детей по группам. Нажмите на имя, чтобы изменить. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",lessons:"Расписание групп и отметка, кто пришёл на занятие.",results:"Места на турнирах: история выступлений каждого ребёнка и пары.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
   $("#hero").innerHTML=`<div class="date">${date}</div><h1>${titles[st.tab]}</h1>${p?`<p>${p}</p>`:""}`;
 }
 function renderFoot(){$("#foot").innerHTML=`<span>${mode==="cloud"?"Общие данные клуба: видят и меняют руководители, которым владелец открыл доступ. Оплаты — личные.":"Откройте приложение через бота в Telegram."}</span>`}
