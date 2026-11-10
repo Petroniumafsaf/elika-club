@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><meta name="apple-mobile-web-app-title" content="Элика-Арт"><meta name="theme-color" content="#2E2E33"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" href="icon-180.png"><link rel="manifest" href="manifest.json"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Клуб Элика-Арт</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="config.js"></script>
@@ -102,7 +102,7 @@ h1,h2,h3{font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#141
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--bg);border-radius:20px 20px 0 0;max-height:88vh;overflow:auto;padding:16px 18px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px;max-width:700px;margin:0 auto}
 .sheet-h{display:flex;justify-content:space-between;align-items:center}
 .iconbtn{border:0;background:none;padding:6px;display:flex;color:var(--muted)}
-body.noscroll{overflow:hidden}html body img.logo,html body img.logo-big{border-radius:50%;display:block;object-fit:cover;box-shadow:0 0 0 1.5px #D9A796}
+body.noscroll{overflow:hidden}#gate .code-in{font:600 26px/1.2 var(--body);letter-spacing:6px;text-align:center;width:200px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--fg)}#gate .code-in:focus{outline:none;border-color:var(--rose)}#gate a.go{text-decoration:none;display:inline-block}html body img.logo,html body img.logo-big{border-radius:50%;display:block;object-fit:cover;box-shadow:0 0 0 1.5px #D9A796}
 html body{--bg:#F8F5F3;--fg:#222226;--line:#E6DEDA;--muted:#6B6461;--soft:#EFE9E5;--faint:#B5ABA6;--rose:#B9765F;--graphite:#2E2E33;background:var(--bg)}
 h1,h2,h3{color:#222226}
 .card,.qbtn,.tile,.gres,.pm,.btn,.mini,.pill,.search,input,textarea,select{background-color:#fff}
@@ -2834,9 +2834,10 @@ function fail(err){toast(err&&err.error==="not_allowed"?"Нет доступа �
 const API=window.ELIKA_API||"";
 const TG=window.Telegram&&Telegram.WebApp;
 const INIT=TG&&TG.initData||"";
+let SESS="";try{SESS=localStorage.getItem("klub-session")||""}catch(e){}
 let rev=0,people=[],syncing=false;
 async function api(body){
-  const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({initData:INIT,...body})});
+  const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(INIT?{initData:INIT,...body}:{session:SESS,...body})});
   return r.json();
 }
 let notes=[];
@@ -2855,12 +2856,21 @@ async function remove(col,id){
   syncing=true;try{const r=await api({action:"del",col,id});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}
 }
 async function setAccess(id,allow){try{const r=await api({action:allow?"allow":"revoke",id});if(r.ok){people=r.people;render();toast(allow?"Доступ открыт":"Доступ закрыт")}else fail(r)}catch(e){fail(e)}}
+function loginGate(msg){gate(`<img src="${ELIKA_LOGO}" width="96" height="96" alt="" style="border-radius:50%;box-shadow:0 0 0 1.5px #D9A796"><h2>Клуб Элика-Арт</h2><p>Журнал для руководителей клуба. Чтобы войти, откройте бота клуба и отправьте ему <b>/login</b> — он пришлёт код из 6 цифр.</p>${msg?`<p style="color:var(--danger)">${esc(msg)}</p>`:""}<a class="go" href="https://t.me/Kdssjkksbot?start=login" target="_blank" rel="noopener">Получить код в боте</a><input id="lcode" class="code-in" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="код" aria-label="Код из бота" onkeydown="if(event.key==='Enter')webLogin(this.value)"><button class="go" onclick="webLogin(document.getElementById('lcode').value)">Войти</button>`)}
+async function webLogin(code){code=String(code||"").replace(/\D/g,"");if(code.length!==6){loginGate("Код — это 6 цифр из сообщения бота.");return}
+  gate(`<h2>Вход…</h2>`);
+  try{const r=await (await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"web_login",code})})).json();
+    if(r.ok){try{localStorage.setItem("klub-session",r.session)}catch(e){}location.replace(location.pathname);return}
+    loginGate(r.error==="too_many"?"Слишком много попыток. Подождите 10 минут.":"Код неверный или устарел. Получите новый в боте.")}
+  catch(e){loginGate("Нет связи. Проверьте интернет и попробуйте ещё раз.")}}
+async function webLogout(){try{await api({action:"web_logout"})}catch(e){}try{localStorage.removeItem("klub-session")}catch(e){}location.replace(location.pathname)}
 async function init(){
   if(TG){try{TG.ready();TG.expand()}catch(e){}try{TG.setHeaderColor("#2E2E33");try{TG.onEvent("homeScreenAdded",()=>toast("Значок добавлен на экран «Домой»"));TG.onEvent("homeScreenFailed",()=>toast("Не получилось добавить значок"))}catch(e){}TG.setBackgroundColor("#F8F5F3")}catch(e){}}
-  if(!INIT){gate(`<h2>Клуб Элика-Арт</h2><p>Это приложение открывается только из Telegram — через кнопку в боте клуба.</p>`);return}
+  if(!INIT){const lm=location.hash.match(/login=(\d{6})/);if(lm){history.replaceState(null,"",location.pathname);webLogin(lm[1]);return}if(!SESS){loginGate();return}}
   mode="cloud";
   try{await pull()}catch(e){
-    if(e&&e.error==="not_allowed")gate(`<h2>Нужен доступ</h2><p>Вы отправили запрос. Попросите владельца приложения открыть вам доступ — в разделе «Главное» у неё появится ваше имя.</p><p class="muted">${esc(e.me&&e.me.name||"")}<br>Telegram ID: ${esc(e.me&&e.me.id||"")}</p><button class="go" onclick="location.reload()">Проверить ещё раз</button>`);
+    if(e&&e.error==="bad_auth"&&!INIT){try{localStorage.removeItem("klub-session")}catch(x){}loginGate("Вход устарел — получите новый код в боте.")}
+    else if(e&&e.error==="not_allowed")gate(`<h2>Нужен доступ</h2><p>Вы отправили запрос. Попросите владельца приложения открыть вам доступ — в разделе «Главное» у неё появится ваше имя.</p><p class="muted">${esc(e.me&&e.me.name||"")}<br>Telegram ID: ${esc(e.me&&e.me.id||"")}</p><button class="go" onclick="location.reload()">Проверить ещё раз</button>`);
     else gate(`<h2>Не удалось загрузить</h2><p>Проверьте интернет и попробуйте ещё раз.</p><p class="muted">${esc(String(e&&e.error||e&&e.message||e))}</p><button class="go" onclick="location.reload()">Повторить</button>`);
     return}
   setInterval(poll,15000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)poll()});
@@ -3752,7 +3762,7 @@ function renderHero(){
   if(isMoreTab(st.tab))$("#hero").insertAdjacentHTML("afterbegin",`<button class="back" data-a="tab" data-v="more">${svg("back",18)}<span>Ещё</span></button>`);
 }
 function wMore(){const un=unseenNotes();
-  return`<div class="tiles">${MORE_TABS.map(([k,n,s])=>`<button class="tile" data-a="tab" data-v="${k}"><b>${n}${k==="chat"&&un?` <i class="dot">${un}</i>`:""}</b>${s?`<small>${s}</small>`:""}</button>`).join("")}<button class="tile" data-a="xhome"><b>На экран «Домой»</b><small>значок журнала на телефоне</small></button></div>`}
+  return`<div class="tiles">${MORE_TABS.map(([k,n,s])=>`<button class="tile" data-a="tab" data-v="${k}"><b>${n}${k==="chat"&&un?` <i class="dot">${un}</i>`:""}</b>${s?`<small>${s}</small>`:""}</button>`).join("")}${!INIT?`<button class="tile" onclick="webLogout()"><b>Выйти</b><small>на этом устройстве</small></button>`:""}<button class="tile" data-a="xhome"><b>На экран «Домой»</b><small>значок журнала на телефоне</small></button></div>`}
 
 /* ---- главная: быстрые действия и мои группы ---- */
 function homeTop(){
@@ -3816,7 +3826,7 @@ function renderSheet(){const host=$("#sheetHost");if(!host)return;
 /* ---- действия ---- */
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-a='xkid'],[data-a='xback'],[data-a='xsheet'],[data-a='xsheetclose'],[data-a='xqa'],[data-a='xmg'],[data-a='xmgdone'],[data-a='xmgedit'],[data-a='xhome']");if(!b)return;const a=b.dataset.a;
-  if(a==="xhome"){if(TG&&TG.addToHomeScreen&&TG.isVersionAtLeast&&TG.isVersionAtLeast("8.0")){try{TG.checkHomeScreenStatus(function(x){if(x==="added")toast("Значок уже на экране «Домой»");else if(x==="unsupported")toast("На этом телефоне Telegram пока не умеет добавлять значок");else TG.addToHomeScreen()})}catch(e){TG.addToHomeScreen()}}else toast("Обновите Telegram — в старой версии этой функции нет");return}
+  if(a==="xhome"){if(!INIT){toast("В Safari нажмите «Поделиться» внизу экрана → «На экран „Домой“»");clearTimeout(tt);tt=setTimeout(()=>$("#toast").hidden=true,9000);return}if(TG&&TG.addToHomeScreen&&TG.isVersionAtLeast&&TG.isVersionAtLeast("8.0")){try{TG.checkHomeScreenStatus(function(x){if(x==="added")toast("Значок уже на экране «Домой»");else if(x==="unsupported")toast("На этом телефоне Telegram пока не умеет добавлять значок");else TG.addToHomeScreen()})}catch(e){TG.addToHomeScreen()}}else toast("Обновите Telegram — в старой версии этой функции нет");return}
   if(a==="xkid"){if(st.tab!=="kid")st.prevTab=st.tab;st.kidId=b.dataset.id;st.kedit=null;st.tab="kid";const g=$("#gsearch");if(g){g.value="";g.blur()}const r=$("#gres");if(r)r.hidden=true;render();window.scrollTo({top:0});return}
   if(a==="xback"){st.kedit=null;st.tab=st.prevTab&&st.prevTab!=="kid"?st.prevTab:"kids";render();return}
   if(a==="xsheet"){st.sheet=true;render();setTimeout(()=>{const t=$("#as-text");if(t)t.focus()},50);return}
