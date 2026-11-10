@@ -103,6 +103,29 @@ h1,h2,h3{font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#141
 .sheet-h{display:flex;justify-content:space-between;align-items:center}
 .iconbtn{border:0;background:none;padding:6px;display:flex;color:var(--muted)}
 body.noscroll{overflow:hidden}
+html body{--bg:#F8F5F3;--fg:#222226;--line:#E6DEDA;--muted:#6B6461;--soft:#EFE9E5;--faint:#B5ABA6;--rose:#B9765F;--graphite:#2E2E33;background:var(--bg)}
+h1,h2,h3{color:#222226}
+.card,.qbtn,.tile,.gres,.pm,.btn,.mini,.pill,.search,input,textarea,select{background-color:#fff}
+html body .btn.primary{background:var(--rose);border-color:var(--rose);color:#fff}
+html body .pill[aria-pressed="true"]{background:var(--graphite);border-color:var(--graphite);color:#F4EEEA}
+html body .qbtn span{font-size:12px;letter-spacing:.01em;overflow-wrap:normal;word-break:normal}
+.pill[aria-pressed="true"]{background:var(--graphite);border-color:var(--graphite);color:#F4EEEA}
+.card.ink{border-color:var(--rose)}
+.nav{background:var(--graphite);border-bottom:0}
+.brand{color:#F4EEEA;text-shadow:none;display:flex;align-items:center;gap:8px}
+.gs input{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#F4EEEA}
+.gs input::placeholder{color:rgba(244,238,234,.6)}
+.gs input:focus{border-color:#D9A796}
+.gs-i{color:#D9A796}
+.bnav button[aria-current="page"]{color:var(--rose)}
+.fab{background:var(--graphite);color:#D9A796}
+.place.top{color:var(--rose)}
+.toast{background:var(--graphite);color:#F4EEEA}
+.qbtn svg,.tile b{color:var(--graphite)}.qbtn svg{color:var(--rose)}
+.loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:60px 0;text-align:center}
+.loading b{font-family:var(--display);font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:22px}
+.loading small{color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-size:12px}
+@media (max-width:380px){.brand{display:flex}.brand span{display:none}}
 @media (max-width:380px){.qbtn span{font-size:12.5px}.brand{display:none}}
 .hero p{margin:6px 0 0;font-size:17px;max-width:48ch}
 .late{color:var(--danger)}
@@ -2833,7 +2856,7 @@ async function remove(col,id){
 }
 async function setAccess(id,allow){try{const r=await api({action:allow?"allow":"revoke",id});if(r.ok){people=r.people;render();toast(allow?"Доступ открыт":"Доступ закрыт")}else fail(r)}catch(e){fail(e)}}
 async function init(){
-  if(TG){try{TG.ready();TG.expand()}catch(e){}}
+  if(TG){try{TG.ready();TG.expand()}catch(e){}try{TG.setHeaderColor("#2E2E33");TG.setBackgroundColor("#F8F5F3")}catch(e){}}
   if(!INIT){gate(`<h2>Клуб Элика-Арт</h2><p>Это приложение открывается только из Telegram — через кнопку в боте клуба.</p>`);return}
   mode="cloud";
   try{await pull()}catch(e){
@@ -3703,7 +3726,7 @@ function renderNav(){
   if(st.tab==="chat"&&loaded)markChatSeen();const un=loaded?unseenNotes():0;
   const cur=isMoreTab(st.tab)?"more":st.tab==="kid"?(st.prevTab&&!isMoreTab(st.prevTab)?st.prevTab:"kids"):st.tab;
   $("#bnav").innerHTML=MAIN_TABS.map(([k,n,ic])=>`<button data-a="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}>${svg(ic)}<span>${n}</span>${k==="more"&&un?`<i class="dot">${un}</i>`:""}</button>`).join("");
-  const n=$("#nav");if(!n.dataset.built){n.dataset.built="1";n.innerHTML=`<div class="tb"><span class="brand">Элика-Арт</span><div class="gs"><span class="gs-i">${svg("search",18)}</span><input id="gsearch" type="search" placeholder="Найти ребёнка" autocomplete="off" aria-label="Найти ребёнка"><div class="gres" id="gres" hidden></div></div></div>`}
+  const n=$("#nav");if(!n.dataset.built){n.dataset.built="1";n.innerHTML=`<div class="tb"><span class="brand"><svg class="logo" width="30" height="30" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20.5" fill="none" stroke="#D9A796" stroke-width="1.6"/><path d="M9 29c6-10 14-13 26-14" fill="none" stroke="#D9A796" stroke-width="1.7" stroke-linecap="round"/><text x="22" y="26" text-anchor="middle" font-family="Cormorant SC,Prata,serif" font-weight="700" font-size="15" fill="#F4EEEA">ЭА</text></svg><span>Элика-Арт</span></span><div class="gs"><span class="gs-i">${svg("search",18)}</span><input id="gsearch" type="search" placeholder="Найти ребёнка" autocomplete="off" aria-label="Найти ребёнка"><div class="gres" id="gres" hidden></div></div></div>`}
   const f=$("#fab");f.hidden=st.tab==="assist"||!!st.sheet||!loaded;
   renderSheet();
 }
@@ -3811,7 +3834,7 @@ function render(){
   const a=document.activeElement,aid=a&&a.id,sel=a&&a.selectionStart,inView=a&&$("#view").contains(a);
   renderNav();renderHero();
   const v=$("#view");
-  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,chat:wChat,assist:wAssist,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,results:wResults,pay:wPay,norms:wNorms,rules:wRules,more:wMore,kid:wKid})[st.tab]();
+  v.innerHTML=!loaded?`<div class="loading"><svg class="logo-big" width="84" height="84" viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="20.5" fill="none" stroke="#D9A796" stroke-width="1.6"/><path d="M9 29c6-10 14-13 26-14" fill="none" stroke="#D9A796" stroke-width="1.7" stroke-linecap="round"/><text x="22" y="26" text-anchor="middle" font-family="Cormorant SC,Prata,serif" font-weight="700" font-size="15" fill="#2E2E33">ЭА</text></svg><b>Элика-Арт</b><small>танцевальный спорт · открываю журнал…</small></div>`:({today:vToday,chat:wChat,assist:wAssist,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,results:wResults,pay:wPay,norms:wNorms,rules:wRules,more:wMore,kid:wKid})[st.tab]();
   renderFoot();afterRules();
   if(inView&&aid){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
