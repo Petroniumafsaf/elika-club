@@ -2700,7 +2700,7 @@ details.card summary{cursor:pointer}
 <script>
 /* ================= constants ================= */
 const CLUB="СШ №2 Элика-Арт";
-const TABS=[["today","Главное"],["chat","Чат"],["kids","Дети"],["lessons","Занятия"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["results","Результаты"],["pay","Оплата"],["norms","Нормативы"],["rules","Правила"]];
+const TABS=[["today","Главное"],["chat","Чат"],["assist","Помощник"],["kids","Дети"],["lessons","Занятия"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["results","Результаты"],["pay","Оплата"],["norms","Нормативы"],["rules","Правила"]];
 const WHAT={lessons:"Занятия",fee:"Взнос за турнир",other:"Другое"},METHOD={cash:"Наличные",card:"На карту"};
 const GROUP_HINTS=["Дети-1+Дети-2, E класс, Ст/Ла","Юниоры-1+Юниоры-2, E класс, Ст/Ла","Дети-2, E класс, 6 танцев","Дети-1+Дети-2, E класс","Юниоры-1+Юниоры-2, E класс"];
 
@@ -3593,20 +3593,57 @@ function wNorms(){
 document.addEventListener("click",e=>{const b=e.target.closest("[data-a='xnsec'],[data-a='xngrp']");if(!b)return;
   if(b.dataset.a==="xnsec"){st.nsec=b.dataset.v}else{st.ngrp={...(st.ngrp||{}),[st.nsec||"tr-adv"]:+b.dataset.v}}render()});
 
+/* ================= помощник в приложении ================= */
+const ASSIST_EX=["В СО(п)-1 сегодня не было Ершовой и Поповой","Вчера в СО(б)-2 были все","Хренов оплатил ноябрь","Переведи Давыдову в СО(п)-1","Добавь турнир «Кубок Невы» 20 декабря","Запиши в чат: купить новые номера"];
+function wAssist(){
+  const log=st.asLog||(st.asLog=[]);
+  let h=`<section class="card"><div class="form" style="padding:0"><label for="as-text">Что изменить в журнале</label>
+    <textarea id="as-text" rows="3" placeholder="Например: в СО(п)-1 сегодня не было Ершовой">${esc(st.asDraft||"")}</textarea>
+    <div class="row between"><span class="muted" style="font-size:13px">Можно наговорить: микрофон на клавиатуре телефона</span><button class="btn primary" data-a="xassend" ${st.asBusy?"disabled":""}>${st.asBusy?"Разбираю…":"Отправить"}</button></div></div></section>`;
+  if(!log.length)h+=`<section><div class="sec-h"><h2>Примеры</h2><small>нажмите, чтобы подставить</small></div><div class="chips">${ASSIST_EX.map(t=>`<button class="pill" data-a="xasex" data-v="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+    <p class="muted" style="font-size:14px;margin-top:14px">Помощник понимает посещаемость, оплаты, новых детей и изменения в их данных, турниры, результаты и записи в чат тренеров. Он сначала показывает, что изменит, и записывает только после «Да».</p></section>`;
+  h+=log.slice().reverse().map(e=>`<section class="card ${e.state==="wait"?"ink":""}"><p style="margin:0 0 8px;font-weight:500">«${esc(e.text)}»</p>
+    ${e.lines&&e.lines.length?`<div style="white-space:pre-wrap;font-size:15px;line-height:1.6">${esc(e.lines.join("\n"))}</div>`:""}
+    ${e.msg&&!(e.lines&&e.lines.length)?`<p class="muted" style="margin:0;white-space:pre-wrap">${esc(e.msg)}</p>`:""}
+    ${e.state==="wait"?`<div class="row" style="margin-top:12px"><button class="btn" data-a="xasno" data-id="${e.id}">Отмена</button><button class="btn primary" data-a="xasok" data-id="${e.id}">Да, записать</button></div>`:""}
+    ${e.state==="done"?`<p style="margin:10px 0 0;color:#2E9E5B;font-weight:500">Записано ✓</p>`:""}${e.state==="no"?`<p class="muted" style="margin:10px 0 0">Отменено</p>`:""}${e.state==="err"?`<p style="margin:10px 0 0;color:var(--danger)">${esc(e.err||"Не получилось")}</p>`:""}</section>`).join("");
+  return h;
+}
+document.addEventListener("input",e=>{if(e.target.id==="as-text")st.asDraft=e.target.value});
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-a='xassend'],[data-a='xasex'],[data-a='xasok'],[data-a='xasno']");if(!b)return;const a=b.dataset.a;
+  if(a==="xasex"){st.asDraft=b.dataset.v;render();setTimeout(()=>{const t=$("#as-text");if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}},0);return}
+  if(a==="xassend"){const text=(st.asDraft||"").trim();if(!text){toast("Напишите, что изменить");return}if(st.asBusy)return;
+    st.asBusy=true;render();
+    const ent={id:"a"+Date.now(),text,state:"",lines:[],msg:""};
+    try{const r=await api({action:"assist",text});
+      if(!r.ok)throw r;Object.assign(ent,{lines:r.lines||[],msg:r.msg||"",key:r.key||"",state:r.key?"wait":""});
+      if(!r.key&&!ent.msg&&!ent.lines.length)ent.msg="Не понял, что нужно изменить. Попробуйте сформулировать иначе.";
+      st.asDraft=""}
+    catch(err){ent.state="err";ent.err=err&&err.error==="not_allowed"?"Нет доступа":"Помощник сейчас недоступен. Проверьте интернет и повторите."}
+    st.asBusy=false;(st.asLog||(st.asLog=[])).push(ent);render();return}
+  const ent=(st.asLog||[]).find(x=>x.id===b.dataset.id);if(!ent||ent.state!=="wait")return;
+  if(a==="xasno"){ent.state="no";render();try{await api({action:"assist_no",key:ent.key})}catch(e){}return}
+  if(a==="xasok"){ent.state="busy";render();
+    try{const r=await api({action:"assist_ok",key:ent.key});if(!r.ok)throw r;ent.state="done";rev=r.rev||rev;await pull()}
+    catch(err){ent.state="err";ent.err=err&&err.error==="expired"?"Время вышло — отправьте команду ещё раз.":"Не сохранилось. Повторите."}
+    render()}
+});
+
 /* ================= оболочка ================= */
 function render(){
   const a=document.activeElement,aid=a&&a.id,sel=a&&a.selectionStart,inView=a&&$("#view").contains(a);
   renderNav();renderHero();
   const v=$("#view");
-  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,chat:wChat,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,results:wResults,pay:wPay,norms:wNorms,rules:wRules})[st.tab]();
+  v.innerHTML=!loaded?`<p class="empty"><b>Открываю журнал клуба…</b></p>`:({today:vToday,chat:wChat,assist:wAssist,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,results:wResults,pay:wPay,norms:wNorms,rules:wRules})[st.tab]();
   renderFoot();afterRules();
   if(inView&&aid){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
 function renderNav(){if(st.tab==="chat"&&loaded)markChatSeen();const un=unseenNotes();$("#nav").innerHTML=TABS.map(([k,n])=>`<button role="tab" data-a="tab" data-v="${k}" aria-selected="${st.tab===k}">${n}${k==="chat"&&un?`<sup>${un}</sup>`:""}</button>`).join("");const on=$("#nav [aria-selected=true]");if(on){const n=$("#nav");if(on.offsetLeft+on.offsetWidth>n.scrollLeft+n.clientWidth||on.offsetLeft<n.scrollLeft)n.scrollLeft=on.offsetLeft-20}}
 function renderHero(){
   const date=new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
-  const titles={today:"Клуб",chat:"Чат тренеров",kids:"Дети",lessons:"Занятия",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",results:"Результаты",pay:"Оплата",norms:"Нормативы",rules:"Правила"};
-  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",kids:"Список детей по группам. Нажмите на имя, чтобы изменить. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",lessons:"Расписание групп и отметка, кто пришёл на занятие.",results:"Места на турнирах: история выступлений каждого ребёнка и пары.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",norms:"Нормативы ОФП и СФП спортшколы: для зачисления и для перевода по годам обучения.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
+  const titles={today:"Клуб",chat:"Чат тренеров",assist:"Помощник",kids:"Дети",lessons:"Занятия",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",results:"Результаты",pay:"Оплата",norms:"Нормативы",rules:"Правила"};
+  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",assist:"Напишите своими словами, что изменить в журнале, — помощник покажет изменения и запишет после «Да».",kids:"Список детей по группам. Нажмите на имя, чтобы изменить. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",lessons:"Расписание групп и отметка, кто пришёл на занятие.",results:"Места на турнирах: история выступлений каждого ребёнка и пары.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",norms:"Нормативы ОФП и СФП спортшколы: для зачисления и для перевода по годам обучения.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
   $("#hero").innerHTML=`<div class="date">${date}</div><h1>${titles[st.tab]}</h1>${p?`<p>${p}</p>`:""}`;
 }
 function renderFoot(){$("#foot").innerHTML=`<span>${mode==="cloud"?"Общие данные клуба: видят и меняют руководители, которым владелец открыл доступ. Оплаты — личные.":"Откройте приложение через бота в Telegram."}</span>`}
