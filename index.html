@@ -2856,7 +2856,7 @@ async function remove(col,id){
 }
 async function setAccess(id,allow){try{const r=await api({action:allow?"allow":"revoke",id});if(r.ok){people=r.people;render();toast(allow?"Доступ открыт":"Доступ закрыт")}else fail(r)}catch(e){fail(e)}}
 async function init(){
-  if(TG){try{TG.ready();TG.expand()}catch(e){}try{TG.setHeaderColor("#2E2E33");TG.setBackgroundColor("#F8F5F3")}catch(e){}}
+  if(TG){try{TG.ready();TG.expand()}catch(e){}try{TG.setHeaderColor("#2E2E33");try{TG.onEvent("homeScreenAdded",()=>toast("Значок добавлен на экран «Домой»"));TG.onEvent("homeScreenFailed",()=>toast("Не получилось добавить значок"))}catch(e){}TG.setBackgroundColor("#F8F5F3")}catch(e){}}
   if(!INIT){gate(`<h2>Клуб Элика-Арт</h2><p>Это приложение открывается только из Telegram — через кнопку в боте клуба.</p>`);return}
   mode="cloud";
   try{await pull()}catch(e){
@@ -3752,7 +3752,7 @@ function renderHero(){
   if(isMoreTab(st.tab))$("#hero").insertAdjacentHTML("afterbegin",`<button class="back" data-a="tab" data-v="more">${svg("back",18)}<span>Ещё</span></button>`);
 }
 function wMore(){const un=unseenNotes();
-  return`<div class="tiles">${MORE_TABS.map(([k,n,s])=>`<button class="tile" data-a="tab" data-v="${k}"><b>${n}${k==="chat"&&un?` <i class="dot">${un}</i>`:""}</b>${s?`<small>${s}</small>`:""}</button>`).join("")}</div>`}
+  return`<div class="tiles">${MORE_TABS.map(([k,n,s])=>`<button class="tile" data-a="tab" data-v="${k}"><b>${n}${k==="chat"&&un?` <i class="dot">${un}</i>`:""}</b>${s?`<small>${s}</small>`:""}</button>`).join("")}<button class="tile" data-a="xhome"><b>На экран «Домой»</b><small>значок журнала на телефоне</small></button></div>`}
 
 /* ---- главная: быстрые действия и мои группы ---- */
 function homeTop(){
@@ -3815,7 +3815,8 @@ function renderSheet(){const host=$("#sheetHost");if(!host)return;
 
 /* ---- действия ---- */
 document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-a='xkid'],[data-a='xback'],[data-a='xsheet'],[data-a='xsheetclose'],[data-a='xqa'],[data-a='xmg'],[data-a='xmgdone'],[data-a='xmgedit']");if(!b)return;const a=b.dataset.a;
+  const b=e.target.closest("[data-a='xkid'],[data-a='xback'],[data-a='xsheet'],[data-a='xsheetclose'],[data-a='xqa'],[data-a='xmg'],[data-a='xmgdone'],[data-a='xmgedit'],[data-a='xhome']");if(!b)return;const a=b.dataset.a;
+  if(a==="xhome"){if(TG&&TG.addToHomeScreen&&TG.isVersionAtLeast&&TG.isVersionAtLeast("8.0")){try{TG.checkHomeScreenStatus(function(x){if(x==="added")toast("Значок уже на экране «Домой»");else if(x==="unsupported")toast("На этом телефоне Telegram пока не умеет добавлять значок");else TG.addToHomeScreen()})}catch(e){TG.addToHomeScreen()}}else toast("Обновите Telegram — в старой версии этой функции нет");return}
   if(a==="xkid"){if(st.tab!=="kid")st.prevTab=st.tab;st.kidId=b.dataset.id;st.kedit=null;st.tab="kid";const g=$("#gsearch");if(g){g.value="";g.blur()}const r=$("#gres");if(r)r.hidden=true;render();window.scrollTo({top:0});return}
   if(a==="xback"){st.kedit=null;st.tab=st.prevTab&&st.prevTab!=="kid"?st.prevTab:"kids";render();return}
   if(a==="xsheet"){st.sheet=true;render();setTimeout(()=>{const t=$("#as-text");if(t)t.focus()},50);return}
