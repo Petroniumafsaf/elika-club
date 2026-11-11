@@ -3823,8 +3823,7 @@ function wMore(){const un=unseenNotes();
 function homeTop(){
   const t=today(),tl=todaysLessons(t).filter(s=>!mine()||mine().includes(s.group));
   let h=`<div class="qa"><button class="qbtn" data-a="xqa" data-v="att">${svg("cal",26)}<span>Отметить занятие</span>${tl.length?`<small>${tl.length} ${plural(tl.length,"занятие","занятия","занятий")} сегодня</small>`:`<small>по расписанию нет</small>`}</button>
-    <button class="qbtn" data-a="xqa" data-v="pay"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9 12.5l2 2 4-4.5"/></svg><span>Отметить оплату</span><small>кружки в списке детей</small></button>
-    <button class="qbtn" data-a="xsheet">${svg("spark",26)}<span>Помощник</span><small>сказать или написать</small></button></div>`;
+    <button class="qbtn" data-a="xqa" data-v="pay"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9 12.5l2 2 4-4.5"/></svg><span>Отметить оплату</span><small>кружки в списке детей</small></button></div>`;
   const groups=allGroups();
   if(st.mgEdit||!mine()){const sel=new Set(myGroups||[]);
     h+=`<section class="card"><div class="sec-h"><h2>Мои группы</h2><small>${mine()?"нажмите, чтобы изменить":"выберите один раз"}</small></div>
@@ -3883,7 +3882,6 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-a='xkid'],[data-a='xback'],[data-a='xsheet'],[data-a='xsheetclose'],[data-a='xqa'],[data-a='xmg'],[data-a='xmgdone'],[data-a='xmgedit']");if(!b)return;const a=b.dataset.a;
     if(a==="xkid"){if(st.tab!=="kid")st.prevTab=st.tab;st.kidId=b.dataset.id;st.kedit=null;st.tab="kid";const g=$("#gsearch");if(g){g.value="";g.blur()}const r=$("#gres");if(r)r.hidden=true;render();window.scrollTo({top:0});return}
   if(a==="xback"){st.kedit=null;st.tab=st.prevTab&&st.prevTab!=="kid"?st.prevTab:"kids";render();return}
-  if(a==="xsheet"){st.sheet=true;render();setTimeout(()=>{const t=$("#as-text");if(t)t.focus()},50);return}
   if(a==="xsheetclose"){st.sheet=false;render();return}
   if(a==="xqa"){if(b.dataset.v==="att"){const tl=todaysLessons(today()).filter(s=>!mine()||mine().includes(s.group));const gs=[...new Set(tl.map(s=>s.group))];
       st.tab="lessons";if(gs.length===1){st.attOpen={date:today(),group:gs[0]};st.attSel=null}render();window.scrollTo({top:0});return}
