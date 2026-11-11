@@ -2794,7 +2794,7 @@ details.card summary{cursor:pointer}
 <script>
 /* ================= constants ================= */
 const CLUB="СШ №2 Элика-Арт";
-const TABS=[["today","Главное"],["chat","Чат"],["assist","Помощник"],["kids","Дети"],["lessons","Занятия"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["results","Результаты"],["pay","Оплата"],["norms","Нормативы"],["rules","Правила"]];
+const TABS=[["today","Главное"],["chat","Чат"],["kids","Дети"],["lessons","Занятия"],["bdays","Дни рождения"],["pairs","Пары"],["solo","Соло"],["events","Турниры"],["pay","Оплата"],["norms","Нормативы"],["rules","Правила"]];
 const WHAT={lessons:"Занятия",fee:"Взнос за турнир",other:"Другое"},METHOD={cash:"Наличные",card:"На карту"};
 const GROUP_HINTS=["Дети-1+Дети-2, E класс, Ст/Ла","Юниоры-1+Юниоры-2, E класс, Ст/Ла","Дети-2, E класс, 6 танцев","Дети-1+Дети-2, E класс","Юниоры-1+Юниоры-2, E класс"];
 
@@ -3774,8 +3774,8 @@ const ICO={
   back:'<path d="M15 5l-7 7 7 7"/>'
 };
 const svg=(n,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]}</svg>`;
-const MAIN_TABS=[["today","Главное","home"],["kids","Дети","kids"],["lessons","Занятия","cal"],["assist","Помощник","spark"],["more","Ещё","more"]];
-const MORE_TABS=[["cal","Календарь","занятия, турниры, дни рождения"],["mycal","Моё расписание","из Google Календаря"],["chat","Чат тренеров","идеи, заметки, вопросы"],["bdays","Дни рождения","ближайшие 30 дней"],["events","Турниры","участники, сообщения родителям"],["results","Результаты","места на турнирах"],["pairs","Пары",""],["solo","Соло",""],["pay","Оплата","ваши личные записи"],["norms","Нормативы","ОФП и СФП"],["rules","Правила","костюмы, фигуры, классы"]];
+const MAIN_TABS=[["today","Главное","home"],["kids","Дети","kids"],["lessons","Занятия","cal"],["more","Ещё","more"]];
+const MORE_TABS=[["cal","Календарь","занятия, турниры, дни рождения"],["mycal","Моё расписание","из Google Календаря"],["chat","Чат тренеров","идеи, заметки, вопросы"],["bdays","Дни рождения","ближайшие 30 дней"],["events","Турниры","участники, сообщения родителям"],["pairs","Пары",""],["solo","Соло",""],["pay","Оплата","ваши личные записи"],["norms","Нормативы","ОФП и СФП"],["rules","Правила","костюмы, фигуры, классы"]];
 const isMoreTab=t=>MORE_TABS.some(x=>x[0]===t);
 let myGroups=null;try{myGroups=JSON.parse(localStorage.getItem("klub-mygroups")||"null")}catch(e){}
 const mine=()=>Array.isArray(myGroups)&&myGroups.length?myGroups:null;
@@ -3784,7 +3784,6 @@ if(mine()&&!st.kgroup)st.kgroup="__my";
 
 function ensureShell(){
   if(!$("#bnav")){const b=document.createElement("nav");b.id="bnav";b.className="bnav";b.setAttribute("aria-label","Разделы");document.body.appendChild(b)}
-  if(!$("#fab")){const f=document.createElement("button");f.id="fab";f.className="fab";f.dataset.a="xsheet";f.setAttribute("aria-label","Помощник");f.innerHTML=svg("spark",24);document.body.appendChild(f)}
   if(!$("#sheetHost")){const s=document.createElement("div");s.id="sheetHost";document.body.appendChild(s)}
 }
 function renderNav(){
@@ -3793,7 +3792,6 @@ function renderNav(){
   const cur=isMoreTab(st.tab)?"more":st.tab==="kid"?(st.prevTab&&!isMoreTab(st.prevTab)?st.prevTab:"kids"):st.tab;
   $("#bnav").innerHTML=MAIN_TABS.map(([k,n,ic])=>`<button data-a="tab" data-v="${k}" ${cur===k?'aria-current="page"':""}>${svg(ic)}<span>${n}</span>${k==="more"&&un?`<i class="dot">${un}</i>`:""}</button>`).join("");
   const n=$("#nav");if(!n.dataset.built){n.dataset.built="1";n.innerHTML=`<div class="tb"><span class="brand"><img class="logo" src="${ELIKA_LOGO}" width="36" height="36" alt=""><span>Элика-Арт</span></span><div class="gs"><span class="gs-i">${svg("search",18)}</span><input id="gsearch" type="search" placeholder="Найти ребёнка" autocomplete="off" aria-label="Найти ребёнка"><div class="gres" id="gres" hidden></div></div></div>`}
-  const f=$("#fab");f.hidden=st.tab==="assist"||!!st.sheet||!loaded;
   renderSheet();
 }
 function gsearchResults(q){
@@ -3819,7 +3817,7 @@ function renderHero(){
   if(isMoreTab(st.tab))$("#hero").insertAdjacentHTML("afterbegin",`<button class="back" data-a="tab" data-v="more">${svg("back",18)}<span>Ещё</span></button>`);
 }
 function wMore(){const un=unseenNotes();
-  return`<div class="tiles">${MORE_TABS.filter(x=>x[0]!=="mycal"||(me&&me.owner)).map(([k,n,s])=>`<button class="tile" data-a="tab" data-v="${k}"><b>${n}${k==="chat"&&un?` <i class="dot">${un}</i>`:""}</b>${s?`<small>${s}</small>`:""}</button>`).join("")}${!INIT?`<button class="tile" onclick="webLogout()"><b>Выйти</b><small>на этом устройстве</small></button>`:""}<button class="tile" data-a="xhome"><b>На экран «Домой»</b><small>значок журнала на телефоне</small></button></div>`}
+  return`<div class="tiles">${MORE_TABS.filter(x=>x[0]!=="mycal"||(me&&me.owner)).map(([k,n,s])=>`<button class="tile" data-a="tab" data-v="${k}"><b>${n}${k==="chat"&&un?` <i class="dot">${un}</i>`:""}</b>${s?`<small>${s}</small>`:""}</button>`).join("")}${!INIT?`<button class="tile" onclick="webLogout()"><b>Выйти</b><small>на этом устройстве</small></button>`:""}</div>`}
 
 /* ---- главная: быстрые действия и мои группы ---- */
 function homeTop(){
@@ -3882,9 +3880,8 @@ function renderSheet(){const host=$("#sheetHost");if(!host)return;
 
 /* ---- действия ---- */
 document.addEventListener("click",e=>{
-  const b=e.target.closest("[data-a='xkid'],[data-a='xback'],[data-a='xsheet'],[data-a='xsheetclose'],[data-a='xqa'],[data-a='xmg'],[data-a='xmgdone'],[data-a='xmgedit'],[data-a='xhome']");if(!b)return;const a=b.dataset.a;
-  if(a==="xhome"){if(!INIT){toast("В Safari нажмите «Поделиться» внизу экрана → «На экран „Домой“»");clearTimeout(tt);tt=setTimeout(()=>$("#toast").hidden=true,9000);return}if(TG&&TG.addToHomeScreen&&TG.isVersionAtLeast&&TG.isVersionAtLeast("8.0")){try{TG.checkHomeScreenStatus(function(x){if(x==="added")toast("Значок уже на экране «Домой»");else if(x==="unsupported")toast("На этом телефоне Telegram пока не умеет добавлять значок");else TG.addToHomeScreen()})}catch(e){TG.addToHomeScreen()}}else toast("Обновите Telegram — в старой версии этой функции нет");return}
-  if(a==="xkid"){if(st.tab!=="kid")st.prevTab=st.tab;st.kidId=b.dataset.id;st.kedit=null;st.tab="kid";const g=$("#gsearch");if(g){g.value="";g.blur()}const r=$("#gres");if(r)r.hidden=true;render();window.scrollTo({top:0});return}
+  const b=e.target.closest("[data-a='xkid'],[data-a='xback'],[data-a='xsheet'],[data-a='xsheetclose'],[data-a='xqa'],[data-a='xmg'],[data-a='xmgdone'],[data-a='xmgedit']");if(!b)return;const a=b.dataset.a;
+    if(a==="xkid"){if(st.tab!=="kid")st.prevTab=st.tab;st.kidId=b.dataset.id;st.kedit=null;st.tab="kid";const g=$("#gsearch");if(g){g.value="";g.blur()}const r=$("#gres");if(r)r.hidden=true;render();window.scrollTo({top:0});return}
   if(a==="xback"){st.kedit=null;st.tab=st.prevTab&&st.prevTab!=="kid"?st.prevTab:"kids";render();return}
   if(a==="xsheet"){st.sheet=true;render();setTimeout(()=>{const t=$("#as-text");if(t)t.focus()},50);return}
   if(a==="xsheetclose"){st.sheet=false;render();return}
@@ -3961,15 +3958,15 @@ function render(){
   const a=document.activeElement,aid=a&&a.id,sel=a&&a.selectionStart,inView=a&&$("#view").contains(a);
   renderNav();renderHero();
   const v=$("#view");
-  v.innerHTML=!loaded?`<div class="loading"><img class="logo-big" src="${ELIKA_LOGO}" width="84" height="84" alt=""><b>Элика-Арт</b><small>танцевальный спорт · открываю журнал…</small></div>`:({today:vToday,chat:wChat,assist:wAssist,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,results:wResults,pay:wPay,norms:wNorms,cal:wCal,mycal:wMyCal,rules:wRules,more:wMore,kid:wKid})[st.tab]();
+  v.innerHTML=!loaded?`<div class="loading"><img class="logo-big" src="${ELIKA_LOGO}" width="84" height="84" alt=""><b>Элика-Арт</b><small>танцевальный спорт · открываю журнал…</small></div>`:(({today:vToday,chat:wChat,kids:wKids,lessons:wLessons,bdays:wBdays,pairs:wPairs,solo:wSolo,events:wEvents,pay:wPay,norms:wNorms,cal:wCal,mycal:wMyCal,rules:wRules,more:wMore,kid:wKid})[st.tab]||vToday)();
   renderFoot();afterRules();
   if(inView&&aid){const el=document.getElementById(aid);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
 function renderNavOld(){if(st.tab==="chat"&&loaded)markChatSeen();const un=unseenNotes();$("#nav").innerHTML=TABS.map(([k,n])=>`<button role="tab" data-a="tab" data-v="${k}" aria-selected="${st.tab===k}">${n}${k==="chat"&&un?`<sup>${un}</sup>`:""}</button>`).join("");const on=$("#nav [aria-selected=true]");if(on){const n=$("#nav");if(on.offsetLeft+on.offsetWidth>n.scrollLeft+n.clientWidth||on.offsetLeft<n.scrollLeft)n.scrollLeft=on.offsetLeft-20}}
 function renderHeroBase(){
   const date=new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
-  const titles={today:"Клуб",chat:"Чат тренеров",assist:"Помощник",kids:"Дети",lessons:"Занятия",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",results:"Результаты",pay:"Оплата",norms:"Нормативы",rules:"Правила",cal:"Календарь",mycal:"Моё расписание"};
-  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",assist:"Напишите своими словами, что изменить в журнале, — помощник покажет изменения и запишет после «Да».",kids:"Список детей по группам. Нажмите на имя, чтобы открыть карточку. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",lessons:"Расписание групп и отметка, кто пришёл на занятие.",results:"Места на турнирах: история выступлений каждого ребёнка и пары.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",mycal:"Ваш рабочий график из Google Календаря. Этот раздел видите только вы.",cal:"Занятия, турниры и дни рождения по дням. Можно подписаться в календаре телефона.",norms:"Нормативы ОФП и СФП спортшколы: для зачисления и для перевода по годам обучения.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
+  const titles={today:"Клуб",chat:"Чат тренеров",kids:"Дети",lessons:"Занятия",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",pay:"Оплата",norms:"Нормативы",rules:"Правила",cal:"Календарь",mycal:"Моё расписание"};
+  const p={today:`«${CLUB}» — общий журнал тренеров.`,chat:"Идеи, заметки и вопросы — видят все тренеры с доступом.",kids:"Список детей по группам. Нажмите на имя, чтобы открыть карточку. Кружок — оплата за этот месяц: зелёный — оплачено, красный — нет.",bdays:"Кто из детей празднует в ближайшие 30 дней.",lessons:"Расписание групп и отметка, кто пришёл на занятие.",pairs:"",solo:"Солисты клуба по возрастным категориям.",pay:"Кто сколько отдал за занятия и взносы — наличными или на карту. Эти записи видите только вы.",events:"Нажмите на турнир, чтобы увидеть участников, записать ребёнка или собрать сообщение родителям.",mycal:"Ваш рабочий график из Google Календаря. Этот раздел видите только вы.",cal:"Занятия, турниры и дни рождения по дням. Можно подписаться в календаре телефона.",norms:"Нормативы ОФП и СФП спортшколы: для зачисления и для перевода по годам обучения.",rules:"Правила вида спорта 2026 и Положение о массовом спорте ФТСАРР: костюмы по возрастам, фигуры по классам, полный текст с поиском."}[st.tab];
   $("#hero").innerHTML=`<div class="date">${date}</div><h1>${titles[st.tab]}</h1>${p?`<p>${p}</p>`:""}`;
 }
 function renderFoot(){$("#foot").innerHTML=`<span>${mode==="cloud"?"Общие данные клуба: видят и меняют руководители, которым владелец открыл доступ. Оплаты — личные.":"Откройте приложение через бота в Telegram."}</span>`}
