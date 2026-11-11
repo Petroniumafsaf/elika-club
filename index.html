@@ -3976,7 +3976,7 @@ function renderNavOld(){if(st.tab==="chat"&&loaded)markChatSeen();const un=unsee
 function renderHeroBase(){
   const date=new Date().toLocaleDateString("ru-RU",{weekday:"long",day:"numeric",month:"long"});
   const titles={today:"Клуб",chat:"Чат тренеров",kids:"Дети",lessons:"Занятия",bdays:"Дни рождения",pairs:"Пары",solo:"Соло",events:"Турниры",pay:"Оплата",norms:"Нормативы",rules:"Правила",cal:"Календарь",mycal:"Моё расписание"};
-  const p={today:`«${CLUB}» — общий журнал тренеров.`};
+  const p=({today:`«${CLUB}» — общий журнал тренеров.`})[st.tab]||"";
   $("#hero").innerHTML=`${st.tab==="today"?`<div class="date">${date}</div>`:""}<h1>${titles[st.tab]}</h1>${p?`<p>${p}</p>`:""}`;
 }
 function renderFoot(){$("#foot").innerHTML=`<span>${mode==="cloud"?"Общие данные клуба: видят и меняют руководители, которым владелец открыл доступ. Оплаты — личные.":"Откройте приложение через бота в Telegram."}</span>`}
