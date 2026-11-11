@@ -167,6 +167,34 @@ html body .qbtn span{font-size:12px;letter-spacing:.01em;overflow-wrap:normal;wo
 h3.g{font-size:19px;margin:18px 0 2px}
 h3.g.late{color:var(--danger)}
 .sub-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.chat-cap{padding:12px 14px}
+.chat-row{display:flex;gap:8px;align-items:flex-end}
+.chat-cap .chat-row textarea,.chat-reps .chat-row input{flex:1;min-width:0;width:100%;min-height:44px;box-sizing:border-box;border:1px solid var(--line);border-radius:22px;padding:10px 16px;background:var(--soft);color:var(--fg);font-size:16px;line-height:1.4;outline:none;resize:none}
+.chat-send{width:44px;height:44px;flex:none;border:0;border-radius:50%;background:#9A5A45;display:flex;align-items:center;justify-content:center;padding:0}
+.chat-send:disabled{opacity:.35}
+.chat-pin{background:var(--soft);border-radius:14px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.chat-pin small{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chat-list{display:flex;flex-direction:column;gap:12px}
+.chat-msg{display:flex;gap:8px;align-items:flex-end;width:92%}
+.chat-msg.own{margin-left:auto}
+.chat-av{width:34px;height:34px;flex:none;border-radius:50%;background:var(--soft);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--muted)}
+.chat-bub{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.chat-msg.own .chat-bub{background:var(--graphite);border-color:var(--graphite);color:#F4EEEA;border-radius:18px 18px 6px 18px}
+.chat-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.chat-top small{color:var(--muted);font-size:12px}
+.chat-msg.own .chat-top small{color:#CFC6C1}
+.chat-tag{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8F513D}
+.chat-msg.own .chat-tag{color:#E5B8A6}
+.chat-text{white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chat-acts .pill{background:transparent;min-height:36px}
+.chat-msg.own .chat-acts .pill,.chat-msg.own .chat-acts .mini{background:transparent;border-color:#6A6A72;color:#E9E2DE}
+.chat-msg .chat-acts .pill[aria-pressed="true"]{background:#9A5A45;border-color:#9A5A45;color:#fff}
+.chat-reps{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.chat-msg.own .chat-reps{border-color:#55555C}
+.chat-rep{background:var(--soft);border-radius:12px;padding:8px 12px;color:var(--fg)}
+.chat-rep small{color:var(--muted);font-size:12px}
+
 #gate{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}#gate .gate-in{max-width:420px;display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center}#gate h2{font-size:28px}#gate p{margin:0}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
 .search{width:100%;border:1px solid var(--line);border-radius:999px;padding:10px 16px;background:var(--bg)}
@@ -2841,7 +2869,7 @@ async function api(body){
   return r.json();
 }
 let notes=[];
-function applyData(d){notes=(d.settings||[]).filter(x=>String(x.id).startsWith("note-"));kids=d.kids||[];pairs=d.pairs||[];solos=d.solos||[];events=d.events||[];entries=d.entries||[];sentDocs=d.sent||[];payDocs=d.pay||[];settings=(d.settings||[]).find(x=>x.id==="main")||{};applyExtra(d.settings||[])}
+function applyData(d){replies=(d.settings||[]).filter(x=>String(x.id).startsWith("nrep-"));notes=(d.settings||[]).filter(x=>String(x.id).startsWith("note-"));kids=d.kids||[];pairs=d.pairs||[];solos=d.solos||[];events=d.events||[];entries=d.entries||[];sentDocs=d.sent||[];payDocs=d.pay||[];settings=(d.settings||[]).find(x=>x.id==="main")||{};applyExtra(d.settings||[])}
 async function pull(){const r=await api({action:"all"});if(!r.ok)throw r;rev=r.rev;me=r.me;uid=me.id;people=r.people||[];applyData(r.data);loaded=true;render();return r}
 async function poll(){if(syncing||document.hidden||mode!=="cloud")return;try{const r=await api({action:"ver"});if(r.ok&&r.rev!==rev)await pull()}catch(e){}}
 function gate(html){let g=$("#gate");if(!g){g=document.createElement("div");g.id="gate";document.body.appendChild(g)}g.innerHTML=`<div class="gate-in">${html}</div>`}
@@ -2911,20 +2939,31 @@ function vToday(){
 }
 
 /* ================= чат тренеров ================= */
+let replies=[];
 const NOTE_TAGS={idea:"Идея",note:"Заметка",question:"Вопрос"};
 function lastSeenChat(){try{return +localStorage.getItem("klub-chat-seen")||0}catch(e){return 0}}
 function markChatSeen(){try{localStorage.setItem("klub-chat-seen",String(Date.now()))}catch(e){}}
-function unseenNotes(){const t=lastSeenChat();return notes.filter(n=>n.at>t&&n.byId!==(me&&me.id)).length}
+function unseenNotes(){const t=lastSeenChat(),my=me&&me.id;return notes.filter(n=>n.at>t&&n.byId!==my).length+replies.filter(r=>r.at>t&&r.byId!==my).length}
+function chatIni(n){return String(n||"Т").trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0)).join("").toUpperCase()}
+function chatWhen(at){const d=fmt(new Date(at)),t=today();return(d===t?"сегодня":d===addDays(t,-1)?"вчера":dmy(d))+", "+hm(at)}
+const CHAT_ARROW=`<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"></path><path d="M5 12l7-7 7 7"></path></svg>`;
 function wChat(){
-  const tag=st.chatTag||"note",f=st.chatFilter||"all";
-  let h=`<section class="capture"><textarea id="chat-text" rows="3" placeholder="Идея, заметка или вопрос для всех тренеров…">${esc(st.chatDraft||"")}</textarea>
-    <div class="cap-bar"><div class="kinds">${Object.entries(NOTE_TAGS).map(([k,n])=>`<button type="button" class="pill" data-a="chattag" data-v="${k}" aria-pressed="${tag===k}">${n}</button>`).join("")}</div>
-    <button type="button" class="go" data-a="chatsend" ${(st.chatDraft||"").trim()?"":"disabled"}>Отправить</button></div></section>`;
-  const list=notes.filter(n=>f==="all"||n.tag===f).sort((a,b)=>b.at-a.at);
+  const tag=st.chatTag||"note",f=st.chatFilter||"all",my=me&&me.id,boss=!!(me&&me.owner);
+  let h=`<section class="capture chat-cap"><div class="kinds">${Object.entries(NOTE_TAGS).map(([k,n])=>`<button type="button" class="pill" data-a="chattag" data-v="${k}" aria-pressed="${tag===k}">${n}</button>`).join("")}</div>
+    <div class="chat-row"><textarea id="chat-text" rows="2" placeholder="Написать всем тренерам…">${esc(st.chatDraft||"")}</textarea><button type="button" class="chat-send" data-a="chatsend" aria-label="Отправить" ${(st.chatDraft||"").trim()?"":"disabled"}>${CHAT_ARROW}</button></div></section>`;
   h+=`<div class="sub-tabs">${[["all","Все"],...Object.entries(NOTE_TAGS)].map(([k,n])=>`<button type="button" class="pill" data-a="chatfilter" data-v="${k}" aria-pressed="${f===k}">${n}${k==="all"?"":" · "+notes.filter(x=>x.tag===k).length}</button>`).join("")}</div>`;
-  h+=list.length?list.map(n=>{const mine=me&&(n.byId===me.id||me.owner);
-    return`<article class="card" style="padding:14px 16px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap"><b>${esc(n.by||"Тренер")}</b><small class="muted">${esc(NOTE_TAGS[n.tag]||"Заметка")} · ${esc(dmy(fmt(new Date(n.at))))} ${esc(hm(n.at))}</small></div>
-      <div style="white-space:pre-wrap;margin-top:6px">${esc(n.text)}</div>${mine?`<div style="text-align:right;margin-top:6px"><button class="mini" data-a="chatdel" data-id="${esc(n.id)}">удалить</button></div>`:""}</article>`}).join("")
+  const pins=notes.filter(n=>n.pin).sort((a,b)=>b.at-a.at);
+  if(pins.length)h+=pins.map(n=>`<div class="chat-pin"><small>Закреплено · ${esc(n.by||"Тренер")}</small><span>${esc(n.text.length>160?n.text.slice(0,160)+"…":n.text)}</span></div>`).join("");
+  const list=notes.filter(n=>f==="all"||n.tag===f).sort((a,b)=>b.at-a.at);
+  h+=list.length?`<div class="chat-list">${list.map(n=>{
+    const own=n.byId===my,can=own||boss,reps=replies.filter(r=>r.note===n.id).sort((a,b)=>a.at-b.at),open=st.chatOpen===n.id,likes=n.likes||[],liked=likes.includes(my);
+    return`<article class="chat-msg${own?" own":""}">${own?"":`<div class="chat-av" aria-hidden="true">${esc(chatIni(n.by))}</div>`}<div class="chat-bub">
+      <div class="chat-top"><span class="chat-tag">${esc(NOTE_TAGS[n.tag]||"Заметка")}</span><small>${esc(chatWhen(n.at))}</small></div>
+      ${own?"":`<b>${esc(n.by||"Тренер")}</b>`}<div class="chat-text">${esc(n.text)}</div>
+      <div class="chat-acts"><button type="button" class="pill" data-a="chatlike" data-id="${esc(n.id)}" aria-pressed="${liked}">Поддерживаю${likes.length?" · "+likes.length:""}</button><button type="button" class="pill" data-a="chatopen" data-id="${esc(n.id)}" aria-pressed="${open}">Ответы${reps.length?" · "+reps.length:""}</button>${can?`<button type="button" class="mini" data-a="chatpin" data-id="${esc(n.id)}">${n.pin?"открепить":"закрепить"}</button><button type="button" class="mini" data-a="chatdel" data-id="${esc(n.id)}">удалить</button>`:""}</div>
+      ${open?`<div class="chat-reps">${reps.map(r=>`<div class="chat-rep"><b>${esc(r.by||"Тренер")}</b> <small>${esc(chatWhen(r.at))}</small><div class="chat-text">${esc(r.text)}</div>${(r.byId===my||boss)?`<div style="text-align:right"><button type="button" class="mini" data-a="chatrepdel" data-id="${esc(r.id)}">удалить</button></div>`:""}</div>`).join("")}
+        <div class="chat-row"><input id="rep-text" type="text" aria-label="Ответ" placeholder="Ответить…" value="${esc(st.repDraft||"")}"><button type="button" class="chat-send" data-a="chatreply" data-id="${esc(n.id)}" aria-label="Отправить ответ">${CHAT_ARROW}</button></div></div>`:""}
+    </div></article>`}).join("")}</div>`
     :`<p class="empty"><b>Пока пусто</b>Напишите первую идею или заметку — её увидят все тренеры с доступом.</p>`;
   return h;
 }
@@ -2934,6 +2973,23 @@ async function chatSend(){
   notes.push(n);st.chatDraft="";markChatSeen();render();
   syncing=true;try{const r=await api({action:"put",col:"settings",id:n.id,doc:n});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}
 }
+function chatBy(){return String(me&&me.name||"").replace(/\s*\(@[^)]*\)$/,"")}
+async function chatSave(doc){syncing=true;try{const r=await api({action:"put",col:"settings",id:doc.id,doc});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}}
+async function chatReply(id){
+  const text=(st.repDraft||"").trim();if(!text||!me||!notes.some(n=>n.id===id))return;
+  const r={id:"nrep-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),note:id,text,by:chatBy(),byId:me.id,at:Date.now()};
+  replies.push(r);st.repDraft="";markChatSeen();render();await chatSave(r);
+}
+async function chatLike(id){
+  const n=notes.find(x=>x.id===id);if(!n||!me)return;const l=(n.likes||[]).slice(),i=l.indexOf(me.id);if(i>=0)l.splice(i,1);else l.push(me.id);
+  n.likes=l;render();await chatSave(n);
+}
+async function chatPin(id){const n=notes.find(x=>x.id===id);if(!n)return;n.pin=!n.pin;render();await chatSave(n)}
+async function chatRepDel(id){
+  const i=replies.findIndex(x=>x.id===id);if(i<0)return;replies.splice(i,1);render();
+  syncing=true;try{const r=await api({action:"del",col:"settings",id});if(!r.ok)throw r;rev=r.rev}catch(e){fail(e);pull().catch(()=>{})}finally{syncing=false}
+}
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="rep-text"&&st.chatOpen){e.preventDefault();chatReply(st.chatOpen)}});
 async function chatDel(id){
   const i=notes.findIndex(x=>x.id===id);if(i<0)return;const old=notes[i];notes.splice(i,1);render();
   toast("Сообщение удалено",async()=>{notes.push(old);render();try{await api({action:"put",col:"settings",id:old.id,doc:old})}catch(e){}});
@@ -3926,6 +3982,11 @@ document.addEventListener("click",async e=>{
     case"tab":st.tab=b.dataset.v;try{localStorage.setItem("klub-tab",st.tab)}catch(_){}render();window.scrollTo({top:0});return;
     case"chattag":st.chatTag=b.dataset.v;render();return;
     case"chatfilter":st.chatFilter=b.dataset.v;render();return;
+    case"chatlike":chatLike(id);return;
+    case"chatopen":st.chatOpen=st.chatOpen===id?null:id;st.repDraft="";render();return;
+    case"chatreply":chatReply(id);return;
+    case"chatpin":chatPin(id);return;
+    case"chatrepdel":chatRepDel(id);return;
     case"chatsend":chatSend();return;
     case"chatdel":chatDel(id);return;
     case"allow":setAccess(id,true);return;
@@ -4008,7 +4069,8 @@ document.addEventListener("change",async e=>{const t=e.target;
   if(t.id==="en-who"){st.enWho=t.value;render();setTimeout(()=>$("#en-cat")?.focus(),0)}
   else if(t.id==="en-cat"){const own=t.value==="own";if(own!==!!st.enOwn){st.enOwn=own;render();if(own){const s=$("#en-cat");if(s)s.value="own";setTimeout(()=>$("#en-group")?.focus(),0)}}}
 });
-document.addEventListener("input",e=>{if(e.target.id==="chat-text"){st.chatDraft=e.target.value;const g=document.querySelector('[data-a="chatsend"]');if(g)g.disabled=!e.target.value.trim();return}
+document.addEventListener("input",e=>{if(e.target.id==="rep-text"){st.repDraft=e.target.value;return}
+  if(e.target.id==="chat-text"){st.chatDraft=e.target.value;const g=document.querySelector('[data-a="chatsend"]');if(g)g.disabled=!e.target.value.trim();return}
   if(e.target.id==="ksearch"){st.kq=e.target.value;render()}
   else if(e.target.id==="fq"){st.fq=e.target.value;const F=figsData();const doc=st.fprog==="n"?(F.n||{})[st.fnp]:F[st.fprog];const d=doc&&doc.dances[st.fdance];if(d)$("#figbody").innerHTML=figRows(d,st.fcls,st.fq)}
   else if(e.target.id==="dq"){st.dq=e.target.value;clearTimeout(window._dqt);window._dqt=setTimeout(()=>docFilter(st.dq),200)}});
